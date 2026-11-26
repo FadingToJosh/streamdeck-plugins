@@ -6,7 +6,7 @@ body:
     id: plugin
     attributes:
       label: Which plugin?
-      options: [GitHub Tracker, Something new]
+      options: [Fishing, Fishing Pro, ActivelyPlaying, GitHub Tracker, Something new]
     validations:
       required: true
   - type: textarea

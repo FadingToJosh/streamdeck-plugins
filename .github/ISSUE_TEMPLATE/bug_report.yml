@@ -16,14 +16,14 @@ body:
     id: plugin
     attributes:
       label: Which plugin?
-      options: [GitHub Tracker]
+      options: [Fishing, Fishing Pro, ActivelyPlaying, GitHub Tracker]
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: action
     attributes:
-      label: Which action? (GitHub Tracker)
-      options: [Repo Tracker, Update Alert, Settings panel, Not sure]
+      label: Which action or feature?
+      placeholder: "e.g. Fishing Rod key, OBS overlay, Twitch chat, Now Playing on a dial, Update Alert"
   - type: dropdown
     id: device
     attributes:
@@ -36,18 +36,18 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: Plugin version, Stream Deck app version, and OS (for example 0.1.0, Stream Deck 7.6, Windows 11).
+      description: Plugin version, Stream Deck app version, and OS (for example 1.4.0, Stream Deck 7.6, Windows 11).
     validations:
       required: true
   - type: dropdown
     id: token
     attributes:
-      label: Are you using a GitHub token? (GitHub Tracker)
-      options: [No, "Yes, fine-grained", "Yes, classic"]
+      label: "GitHub Tracker only: are you using a token?"
+      options: [Not using GitHub Tracker, No, "Yes, fine-grained", "Yes, classic"]
   - type: input
     id: repo
     attributes:
-      label: Repo you're tracking (if public)
+      label: "GitHub Tracker only: repo you're tracking (if public)"
       placeholder: owner/repo
   - type: textarea
     id: logs
