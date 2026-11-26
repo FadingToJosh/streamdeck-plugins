@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ActivelyPlaying demo</title>
+<meta name="description" content="Try ActivelyPlaying for Stream Deck in your browser: launch pretend games and watch the key follow along.">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="../../demo-kit/demo.css">
+<style>
+:root { --accent: #2dd4bf; }
+.games { display: grid; gap: 10px; }
+.game { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--panel-2); }
+.game img, .game .noicon { width: 40px; height: 40px; border-radius: 9px; flex: none; }
+.game .noicon { background: #2a3140; display: grid; place-items: center; font-weight: 700; color: var(--muted); font-size: 13px; }
+.game .name { font-weight: 600; }
+.game .exe { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.game .grow { flex: 1; min-width: 0; }
+.game.running { border-color: var(--accent); }
+.game .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); }
+.settings { display: grid; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.settings textarea { width: 100%; min-height: 52px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; color: var(--fg); font: 13px/1.4 var(--mono); resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .two { grid-template-columns: 1fr; } }
+.extras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 600px) { .extras { grid-template-columns: 1fr; } }
+.scan { font-size: 13px; color: var(--muted); margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<header class="top">
+		<img src="icon.png" alt="">
+		<h1>ActivelyPlaying <span>for Stream Deck</span></h1>
+		<span class="pill">Simulation</span>
+		<nav>
+			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/actively-playing">Help &amp; support</a>
+		</nav>
+	</header>
+
+	<div class="intro">
+		<h2>The game you're playing, on a key.</h2>
+		<p>Launch a game on the pretend PC and the key picks it up on its next scan. Switch games and it follows; quit and it goes back to idle. The detection is the plugin's own code; the PC and the games are made up.</p>
+	</div>
+
+	<div class="stage">
+		<div class="panel">
+			<h3>Your PC (simulated)</h3>
+			<p class="sub">Fictional games. Nothing runs, and nothing leaves this page.</p>
+			<div class="games" id="games"></div>
+			<p class="scan" id="scan">The plugin scans running programs every 5 seconds, same as on a real PC.</p>
+			<ul class="log" id="log"></ul>
+		</div>
+
+		<div class="panel">
+			<div class="row"><h3>Your Stream Deck</h3></div>
+			<div class="deck"><div class="grid" id="grid" style="--cols:5"></div></div>
+			<div class="extras">
+				<div><div id="dial"></div><div class="extralabel">Stream Deck + dial. Press it to check now.</div></div>
+				<div><div id="infobar"></div><div class="extralabel">Stream Deck Neo infobar</div></div>
+			</div>
+			<div class="settings">
+				<h3>Key settings</h3>
+				<div class="two">
+					<label class="field">Icon
+						<select id="iconSource"><option value="discord">Store artwork first</option><option value="exe">The game's own icon first</option></select>
+					</label>
+					<label class="check" style="align-self:end"><input type="checkbox" id="hideName"> Hide game name</label>
+				</div>
+				<div class="two">
+					<label class="field"><span>Extra games, one per line: <code>game.exe=Name</code></span><textarea id="extraGames" placeholder="retro-emu.exe=Retro Night"></textarea></label>
+					<label class="field"><span>Ignore, one .exe per line</span><textarea id="ignoreExes" placeholder="kingsworn.exe"></textarea></label>
+				</div>
+			</div>
+			<div class="toast" id="toast">Launch a game on the left.</div>
+		</div>
+	</div>
+
+	<section class="more">
+		<div>
+			<h4>What's simulated</h4>
+			<p>The plugin's detection, matching and drawing run unchanged. Underneath, the list of running programs, the game list and the icons come from this page instead of Windows and the internet. All games shown are fictional.</p>
+		</div>
+		<div>
+			<h4>How it works for real</h4>
+			<p>Every 5 seconds the plugin lists running programs and matches them against the public list of games that Discord recognizes. Discord doesn't need to be installed. If several games run, the most recently launched one wins.</p>
+		</div>
+		<div>
+			<h4>Get it</h4>
+			<p>ActivelyPlaying is on the Elgato Marketplace for Stream Deck 7.6 or later on Windows. It works on keys, Stream Deck + dials and the Neo infobar.</p>
+		</div>
+	</section>
+
+	<footer>ActivelyPlaying is an independent project by FadingToJosh. It is not affiliated with or endorsed by Elgato or Discord. Stream Deck is a trademark of Corsair Memory, Inc. Discord is a trademark of Discord Inc. Games shown are fictional.</footer>
+</div>
+
+<script type="module">
+import { host, setPC } from "./plugin.js";
+import { placeKey, placeDial, placeInfobar, makeLog, makeToast, esc } from "../../demo-kit/deck.js";
+
+const $ = (id) => document.getElementById(id);
+const log = makeLog($("log"));
+const toast = makeToast($("toast"));
+const UUID = "com.fadingtojosh.activelyplaying.nowplaying";
+const DIAL = {"items":[{"key":"icon","type":"pixmap","rect":[6,26,48,48]},{"key":"title","type":"text","rect":[62,24,134,26],"alignment":"left","font":{"size":14,"weight":600},"color":"#ffffff"},{"key":"sub","type":"text","rect":[62,54,134,20],"alignment":"left","font":{"size":12,"weight":400},"color":"#9ca3af"}]};
+const NEO = {"items":[{"key":"icon","type":"pixmap","rect":[8,7,36,36]},{"key":"title","type":"text","rect":[52,5,172,22],"alignment":"left","font":{"size":15,"weight":600},"color":"#ffffff"},{"key":"sub","type":"text","rect":[52,28,172,16],"alignment":"left","font":{"size":11,"weight":400},"color":"#9ca3af"}]};
+
+// ---- fictional games ----------------------------------------------------------------------------
+// exe: what runs. store: artwork the "store" (the game list's icon CDN) has. own: the .exe's icon.
+const tile = (a, b, glyph) => `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="256" height="256" rx="56" fill="url(#g)"/>${glyph}</svg>`;
+const art = (a, b, glyph) => `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><defs><radialGradient id="r" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient></defs><rect width="256" height="256" fill="url(#r)"/><g opacity=".22">${glyph}</g><g transform="translate(128 128) scale(1.18) translate(-128 -128)">${glyph}</g></svg>`;
+const G = {
+	planet: `<ellipse cx="128" cy="132" rx="96" ry="30" fill="none" stroke="#fde68a" stroke-width="12" transform="rotate(-18 128 132)"/><circle cx="128" cy="128" r="52" fill="#f5d0fe"/><circle cx="110" cy="112" r="14" fill="#e9d5ff"/>`,
+	flag: `<g fill="#fff"><rect x="44" y="96" width="44" height="10" rx="5"/><rect x="36" y="120" width="52" height="10" rx="5"/><rect x="50" y="144" width="38" height="10" rx="5"/></g><rect x="100" y="64" width="12" height="140" fill="#fff"/><g><rect x="112" y="70" width="96" height="72" fill="#fff"/>${[0, 1, 2, 3].map((r) => [0, 1, 2, 3, 4, 5].filter((c) => (r + c) % 2 === 0).map((c) => `<rect x="${112 + c * 16}" y="${70 + r * 18}" width="16" height="18" fill="#111"/>`).join("")).join("")}</g>`,
+	ring: `<circle cx="128" cy="134" r="54" fill="none" stroke="#fbbf24" stroke-width="18"/><circle cx="128" cy="134" r="24" fill="#0f766e"/><circle cx="182" cy="74" r="8" fill="#e0f2fe"/><circle cx="198" cy="56" r="5" fill="#e0f2fe"/>`,
+	crown: `<path d="M56 180 L64 92 L102 132 L128 74 L154 132 L192 92 L200 180 Z" fill="#fcd34d" stroke="#b45309" stroke-width="6" stroke-linejoin="round"/><rect x="56" y="180" width="144" height="18" rx="4" fill="#f59e0b"/>`,
+};
+const GAMES = [
+	{ id: "1001", name: "Starhaven", path: "C:/Games/Starhaven/starhaven.exe", list: "starhaven.exe", store: art("#a78bfa", "#1e1b4b", G.planet), own: tile("#7c3aed", "#312e81", G.planet) },
+	{ id: "1002", name: "Turbo Lapse", path: "C:/Games/Turbo Lapse/turbolapse.exe", list: "turbolapse.exe", store: art("#fb923c", "#7c2d12", G.flag), own: tile("#f97316", "#c2410c", G.flag) },
+	{ id: "1003", name: "Abyss Diver", path: "D:/Library/Abyss Diver/Win64/abyssdiver.exe", list: "win64/abyssdiver.exe", store: null, own: tile("#0e7490", "#134e4a", G.ring) },
+	{ id: "1004", name: "Kingsworn", path: "C:/Games/Kingsworn/kingsworn.exe", list: "kingsworn.exe", store: art("#f87171", "#450a0a", G.crown), own: tile("#b91c1c", "#7f1d1d", G.crown) },
+	{ id: "1005", name: "Pixel Orchard", path: "C:/Games/Pixel Orchard/orchard.exe", list: "orchard.exe", store: null, own: null },
+	{ id: null, name: "Retro Night", path: "C:/Tools/retro-emu.exe", list: null, store: null, own: null, note: "Not in the game list. Add it under Extra games." },
+];
+
+async function toPng(svg) {
+	const img = new Image();
+	img.src = `data:image/svg+xml;charset=utf8,${encodeURIComponent(svg)}`;
+	await img.decode();
+	const c = document.createElement("canvas");
+	c.width = c.height = 256;
+	c.getContext("2d").drawImage(img, 0, 0, 256, 256);
+	return c.toDataURL("image/png");
+}
+for (const g of GAMES) {
+	g.ownPng = g.own ? await toPng(g.own) : null;
+	g.storePng = g.store ? await toPng(g.store) : null;
+}
+
+// The game list the detector would download, already in its cached form.
+const list = GAMES.filter((g) => g.list).map((g) => ({ id: g.id, name: g.name, icon_hash: g.store ? `h${g.id}` : null, exes: [g.list] }));
+// Store artwork is fetched from the list's icon CDN; answer those requests here.
+const realFetch = window.fetch.bind(window);
+window.fetch = async (url, opts) => {
+	const m = String(url).match(/app-icons\/(\d+)\//);
+	if (!m) return realFetch(url, opts);
+	const g = GAMES.find((x) => x.id === m[1]);
+	return g?.storePng ? realFetch(g.storePng) : new Response("", { status: 404 });
+};
+
+const BACKGROUND = ["C:/Windows/explorer.exe", "C:/Windows/System32/svchost.exe", "C:/Program Files/Music Player/player.exe"].map((path, i) => ({ path, start: i + 1 }));
+let clock = 100;
+const running = new Map();
+const winPath = (p) => p.replace(/\//g, "\\");
+function sync() {
+	setPC({ running: [...BACKGROUND, ...[...running.entries()].map(([g, start]) => ({ path: winPath(g.path), start }))] });
+	renderGames();
+}
+setPC({
+	games: list,
+	exeIcon: (exe) => GAMES.find((g) => winPath(g.path).toLowerCase() === exe.toLowerCase())?.ownPng?.split(",")[1] ?? "",
+});
+sync();
+
+function renderGames() {
+	$("games").innerHTML = GAMES.map((g, i) => {
+		const on = running.has(g);
+		const icon = g.ownPng ? `<img src="${g.ownPng}" alt="">` : `<div class="noicon">exe</div>`;
+		return `<div class="game${on ? " running" : ""}">${icon}<div class="grow"><div class="name">${esc(g.name)} ${on ? `<span class="tag">running</span>` : ""}</div><div class="exe">${esc(winPath(g.path))}</div>${g.note ? `<div class="exe" style="color:var(--signal)">${esc(g.note)}</div>` : ""}</div><button class="btn" data-i="${i}">${on ? "Quit" : "Launch"}</button></div>`;
+	}).join("");
+}
+$("games").addEventListener("click", (e) => {
+	const b = e.target.closest("button[data-i]");
+	if (!b) return;
+	const g = GAMES[Number(b.dataset.i)];
+	if (running.has(g)) { running.delete(g); log(`<span class="s">quit</span> <span class="k">${esc(g.name)}</span>`); }
+	else { running.set(g, clock++); log(`<span class="a">launched</span> <span class="k">${esc(g.name)}</span>`); }
+	sync();
+	toast(running.size > 1 ? "Several games are running, so the most recently launched one wins." : "The key updates on the plugin's next scan, within 5 seconds. Press the dial to check now.");
+});
+
+// ---- deck ---------------------------------------------------------------------------------------
+let settings = { iconSource: "discord", hideName: false, extraGames: "", ignoreExes: "" };
+const placed = [];
+await new Promise((r) => setTimeout(r, 0));
+const KEYS = [null, null, null, null, null, null, null, "now", null, null, null, null, null, null, null];
+for (const kind of KEYS) {
+	const cell = document.createElement("div");
+	$("grid").appendChild(cell);
+	if (!kind) { cell.className = "key blank"; continue; }
+	placed.push(placeKey(host, cell, UUID, { settings, alt: "Now Playing" }));
+}
+placed.push(placeDial(host, $("dial"), UUID, DIAL, { settings, onPress: () => toast("Pressing the dial checks again straight away.") }));
+placed.push(placeInfobar(host, $("infobar"), UUID, { "layouts/neo.json": NEO }, { settings }));
+
+for (const id of ["iconSource", "hideName", "extraGames", "ignoreExes"]) {
+	$(id).addEventListener(id === "hideName" || id === "iconSource" ? "change" : "input", () => {
+		settings = { iconSource: $("iconSource").value, hideName: $("hideName").checked, extraGames: $("extraGames").value, ignoreExes: $("ignoreExes").value };
+		for (const p of placed) p.setSettings(settings);
+	});
+}
+</script>
+</body>
+</html>

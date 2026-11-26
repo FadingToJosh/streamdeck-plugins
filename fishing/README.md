@@ -6,6 +6,8 @@ Want more fish, rods and stream features? See [Fishing Pro](../fishing-pro/READM
 
 A fishing game played on your Stream Deck keys. Cast your line, watch for a bite, and press at the right moment to reel in one of 21 illustrated fish.
 
+**Try it in your browser:** [interactive demo](https://fadingtojosh.github.io/streamdeck-plugins/fishing/demo/) (a simulation that runs the plugin's real game code).
+
 ## Actions
 
 | Action | What it does |

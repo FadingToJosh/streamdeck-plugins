@@ -4,6 +4,8 @@
 
 The full version of [Fishing](../fishing/README.md): 28 fish, a rare variant of every fish, four fishing rods to unlock, a Stats key and an OBS overlay.
 
+**Try it in your browser:** [interactive demo](https://fadingtojosh.github.io/streamdeck-plugins/fishing-pro/demo/) (a simulation that runs the plugin's real game and OBS overlay, with pretend chat).
+
 ## What's new over Fishing
 
 - **28 fish**: adds Golden Shiner, Rock Bass, Smallmouth Bass, Tiger Trout, Bowfin, Paddlefish and Arapaima.

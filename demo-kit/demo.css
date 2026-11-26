@@ -1,0 +1,91 @@
+/* Shared look for the plugin demos. Each page sets --accent (and may override the others). */
+:root {
+	--bg: #0b0e14; --panel: #141923; --panel-2: #1a2030; --line: #2a3140;
+	--fg: #eef1f6; --muted: #8b94a7; --accent: #34d1bf; --signal: #ff7a45; --ok: #7ee081;
+	--radius: 16px; --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+code { font-family: var(--mono); font-size: .92em; background: #ffffff10; padding: 1px 5px; border-radius: 5px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 600px) { .wrap { padding: 0 16px; } }
+
+header.top { display: flex; align-items: center; gap: 14px; padding: 22px 0; flex-wrap: wrap; }
+header.top img { width: 44px; height: 44px; border-radius: 10px; }
+header.top h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+header.top h1 span { color: var(--muted); font-weight: 500; }
+.pill { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--signal); color: var(--signal); }
+header.top nav { margin-left: auto; display: flex; gap: 18px; font-size: 14px; flex-wrap: wrap; }
+header.top nav a { color: var(--muted); text-decoration: none; }
+header.top nav a:hover { color: var(--fg); }
+
+.intro { padding: 8px 0 24px; max-width: 780px; }
+.intro h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.02em; }
+.intro p { color: var(--muted); margin: 0; font-size: 17px; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
+@media (max-width: 980px) { .stage { grid-template-columns: 1fr; } .stage > .deck-first { order: -1; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+.panel h3 { margin: 0 0 4px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.panel .sub { margin: 0 0 16px; font-size: 14px; color: var(--muted); }
+.panel + .panel { margin-top: 0; }
+.col { display: grid; gap: 24px; min-width: 0; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+
+.btn { border: 1px solid var(--line); background: #222a3b; border-radius: 9px; padding: 7px 12px; font-size: 14px; font-weight: 600; transition: transform .08s, background .15s; }
+.btn:hover { background: #2a3347; }
+.btn:active { transform: scale(.96); background: #34405a; }
+.btn.on { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+.btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+select, input[type=text], input[type=number] { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+label.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+
+.log { font-family: var(--mono); font-size: 12.5px; color: var(--muted); background: #0f131b; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 150px; overflow: hidden; margin: 14px 0 0; list-style: none; }
+.log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log .k { color: var(--fg); } .log .a { color: var(--accent); } .log .s { color: var(--signal); }
+
+/* The deck */
+.deck { background: linear-gradient(180deg, #232a38, #161b25); border: 1px solid #333c4f; border-radius: 26px; padding: 22px; box-shadow: 0 30px 60px -30px #000, inset 0 1px 0 #ffffff14; }
+.grid { display: grid; grid-template-columns: repeat(var(--cols, 5), 1fr); gap: 14px; }
+@media (max-width: 600px) { .deck { padding: 14px; border-radius: 20px; } .grid { gap: 9px; } }
+.key { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #0d1016; box-shadow: 0 0 0 1px #00000080, 0 3px 0 #0a0c11; transition: transform .08s; touch-action: none; user-select: none; -webkit-user-select: none; container-type: inline-size; }
+.key img { width: 100%; height: 100%; display: block; pointer-events: none; }
+.key.live { cursor: pointer; }
+.key.down { transform: translateY(2px) scale(.97); }
+.key .title { position: absolute; left: 3%; right: 3%; bottom: 5%; text-align: center; white-space: pre; font: 700 11cqw/1.15 Arial, Helvetica, sans-serif; color: #fff; -webkit-text-stroke: 2px #000; paint-order: stroke fill; pointer-events: none; }
+.key:not(.down) svg.ring { display: none; }
+.key svg.ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.key svg.ring circle { fill: none; stroke: #ffffffd0; stroke-width: 5; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.key.alert::after { content: "!"; position: absolute; inset: 0; display: grid; place-items: center; background: #000000b0; color: #ffcc00; font: 800 50cqw/1 Arial, sans-serif; }
+.key.ok::after { content: "\2713"; position: absolute; inset: 0; display: grid; place-items: center; background: #000000b0; color: #7ee081; font: 800 50cqw/1 Arial, sans-serif; }
+.key.blank { background: #0d1016; opacity: .55; }
+
+.legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.legend b { color: var(--fg); }
+
+/* Stream Deck + dial segment and Neo infobar, drawn from the plugin's layout JSON */
+.extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 18px; align-items: start; }
+.lcd { position: relative; border-radius: 10px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px #00000080; container-type: inline-size; }
+.lcd .item { position: absolute; display: flex; align-items: center; overflow: hidden; }
+.lcd .item img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.lcd .item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-family: "Segoe UI", Arial, sans-serif; }
+.lcd.live { cursor: pointer; }
+.extralabel { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.knob { width: 44px; height: 44px; margin: 10px auto 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4a5468, #1c212c); box-shadow: 0 2px 0 #0a0c11, inset 0 1px 0 #ffffff22; cursor: pointer; }
+.knob:active { transform: scale(.95); }
+
+.toast { min-height: 48px; margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); font-size: 14px; color: var(--muted); transition: border-color .2s; }
+.toast.on { border-color: var(--signal); color: var(--fg); }
+
+section.more { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 40px 0 20px; }
+@media (max-width: 860px) { section.more { grid-template-columns: 1fr; } }
+section.more h4 { margin: 0 0 6px; font-size: 16px; }
+section.more p, section.more ol, section.more ul { margin: 0; color: var(--muted); font-size: 15px; }
+section.more ol, section.more ul { padding-left: 20px; }
+footer { border-top: 1px solid var(--line); padding: 20px 0 40px; color: var(--muted); font-size: 13px; }

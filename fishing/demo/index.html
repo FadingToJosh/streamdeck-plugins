@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fishing demo</title>
+<meta name="description" content="Play the Fishing Stream Deck plugin in your browser: cast, wait for a bite, reel it in.">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="../../demo-kit/demo.css">
+<style>
+:root { --accent: #38bdf8; }
+.steps { margin: 0; padding-left: 20px; color: var(--muted); font-size: 15px; }
+.steps li { margin-bottom: 6px; }
+.steps b { color: var(--fg); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
+.stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.stat b { display: block; font-size: 24px; }
+.stat span { font-size: 12px; color: var(--muted); }
+.modes { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<header class="top">
+		<img src="icon.png" alt="">
+		<h1>Fishing <span>for Stream Deck</span></h1>
+		<span class="pill">Simulation</span>
+		<nav>
+			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/fishing">Help &amp; support</a>
+			<a href="../../fishing-pro/demo/">Fishing Pro demo</a>
+		</nav>
+	</header>
+
+	<div class="intro">
+		<h2>Cast, wait for the bite, reel it in.</h2>
+		<p>These keys run the plugin's own game code. Click a key to press it, and hold it to open your tackle box. Your catches are kept in this browser.</p>
+	</div>
+
+	<div class="stage">
+		<div class="panel">
+			<h3>How to play</h3>
+			<ol class="steps">
+				<li><b>Press</b> to cast.</li>
+				<li>Wait 3 to 12 seconds. The bobber bounces while you wait.</li>
+				<li>When the key flashes <b>BITE!</b>, press within <b>1.5 seconds</b>. Too early and nothing's biting; too late and it gets away.</li>
+				<li><b>Hold</b> any fishing key for the tackle box. Tap to flip pages, hold again to close.</li>
+			</ol>
+			<div class="stats">
+				<div class="stat"><b id="sTotal">0</b><span>fish caught</span></div>
+				<div class="stat"><b id="sSpecies">0/21</b><span>species found</span></div>
+				<div class="stat"><b id="sBest">–</b><span>latest record</span></div>
+			</div>
+			<ul class="log" id="log"></ul>
+			<div class="row" style="margin:14px 0 0"><span class="sub" style="margin:0">21 fish across four tiers, plus the odd old boot.</span><button class="btn" id="reset">Reset progress</button></div>
+		</div>
+
+		<div class="panel deck-first">
+			<div class="row"><h3>Your Stream Deck</h3></div>
+			<div class="modes" role="group" aria-label="Key setup">
+				<button class="btn on" data-mode="two">Two keys: Spot + Rod</button>
+				<button class="btn" data-mode="solo">One key: Fishing</button>
+				<button class="btn" data-mode="both">Both</button>
+			</div>
+			<div class="deck"><div class="grid" id="grid" style="--cols:5"></div></div>
+			<div class="legend"><span><b>Click</b> = press</span><span><b>Hold</b> = tackle box</span><span>Space or Enter also press a focused key</span></div>
+			<div class="toast" id="toast">Press <b>CAST</b> to start.</div>
+		</div>
+	</div>
+
+	<section class="more">
+		<div>
+			<h4>What's simulated</h4>
+			<p>Nothing about the game. The keys are drawn and driven by the plugin's real code, running on a stand-in for the Stream Deck software. Only the deck itself is fake, and progress is saved in your browser instead of Stream Deck.</p>
+		</div>
+		<div>
+			<h4>The three keys</h4>
+			<ul>
+				<li><b>Fishing Spot</b>: the water. Shows the bobber and the bite.</li>
+				<li><b>Fishing Rod</b>: casts and reels for the Spot.</li>
+				<li><b>Fishing</b>: the whole game on one key.</li>
+			</ul>
+		</div>
+		<div>
+			<h4>Get it</h4>
+			<p>Fishing is free on the Elgato Marketplace for Stream Deck 7.1 or later on Windows. Want more fish, rods and an OBS overlay? Try the <a href="../../fishing-pro/demo/">Fishing Pro demo</a>.</p>
+		</div>
+	</section>
+
+	<footer>Fishing is an independent project by FadingToJosh. It is not affiliated with or endorsed by Elgato. Stream Deck is a trademark of Corsair Memory, Inc.</footer>
+</div>
+
+<script type="module">
+import { host, FISH } from "./plugin.js";
+import { placeKey, makeLog, makeToast } from "../../demo-kit/deck.js";
+
+const grid = document.getElementById("grid");
+const log = makeLog(document.getElementById("log"));
+const toast = makeToast(document.getElementById("toast"));
+const UUID = { spot: "com.fadingtojosh.fishing.spot", rod: "com.fadingtojosh.fishing.rod", solo: "com.fadingtojosh.fishing.solo" };
+const LAYOUTS = {
+	two: [null, null, null, null, null, null, "spot", "rod", null, null, null, null, null, null, null],
+	solo: [null, null, null, null, null, null, null, "solo", null, null, null, null, null, null, null],
+	both: [null, null, null, null, null, null, "spot", "rod", null, "solo", null, null, null, null, null],
+};
+const NAMES = { spot: "Fishing Spot", rod: "Fishing Rod", solo: "Fishing" };
+const COLLECTIBLE = FISH.filter((f) => !f.junk).length;
+
+let placed = [];
+function setMode(mode) {
+	for (const p of placed) p.remove();
+	placed = [];
+	grid.innerHTML = "";
+	for (const kind of LAYOUTS[mode]) {
+		const cell = document.createElement("div");
+		grid.appendChild(cell);
+		if (!kind) { cell.className = "key blank"; continue; }
+		placed.push(placeKey(host, cell, UUID[kind], { holdMs: 600, alt: NAMES[kind] }));
+	}
+	document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("on", b.dataset.mode === mode));
+}
+
+// The plugin saves its stats after every catch; read the change to narrate it.
+let prev = { total: 0, best: {} };
+function showStats(s) {
+	document.getElementById("sTotal").textContent = s.total ?? 0;
+	document.getElementById("sSpecies").textContent = `${Object.keys(s.best ?? {}).length}/${COLLECTIBLE}`;
+}
+host.storageKey = "fishing";
+host.onSaved = (s) => {
+	const best = s.best ?? {};
+	const fresh = Object.keys(best).find((k) => !(k in prev.best));
+	const record = Object.keys(best).find((k) => k in prev.best && best[k] > prev.best[k]);
+	if (fresh) { log(`<span class="a">new species</span> <span class="k">${fresh}</span>, ${best[fresh]}"`); toast(`First ${fresh}! It's in your tackle box now. Hold a key to see it.`); document.getElementById("sBest").textContent = `${best[fresh]}"`; }
+	else if (record) { log(`<span class="s">new record</span> <span class="k">${record}</span>, ${best[record]}"`); toast(`A new personal best for ${record}.`); document.getElementById("sBest").textContent = `${best[record]}"`; }
+	else if ((s.total ?? 0) > (prev.total ?? 0)) log(`caught another fish (${s.total} total)`);
+	prev = { total: s.total ?? 0, best: { ...best } };
+	showStats(s);
+};
+try { const saved = JSON.parse(localStorage.getItem("sd-demo:fishing") ?? "{}"); prev = { total: saved.total ?? 0, best: { ...(saved.best ?? {}) } }; showStats(saved); } catch {}
+
+document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+document.getElementById("reset").addEventListener("click", () => {
+	host.resetSaved();
+	location.reload();
+});
+// Progress loads after the plugin connects (same as on a real deck), so place keys on the next tick.
+setTimeout(() => setMode("two"), 0);
+</script>
+</body>
+</html>
