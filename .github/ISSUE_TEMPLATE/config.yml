@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "GitHub Tracker: token guide"
-    url: https://github.com/FadingToJosh/streamdeck-plugins/blob/main/github-tracker/token-guide/en.md
+  - name: "Repo Watch: token guide"
+    url: https://github.com/FadingToJosh/streamdeck-plugins/blob/main/repo-watch/token-guide/en.md
     about: How to make a read-only token for private repos.

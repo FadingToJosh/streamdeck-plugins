@@ -8,7 +8,7 @@ Help, documentation and issue tracking for my Stream Deck plugins. Source code i
 | **Fishing Pro** | The full fishing game: 28 fish, rare variants, rod upgrades, an OBS overlay, and chat that can play along. | [Docs](fishing-pro/README.md) |
 | **ActivelyPlaying** | Shows the game you're playing on a key, a Stream Deck + dial or the Neo infobar. | [Docs](actively-playing/README.md) |
 | **Twitchpoint** | Shows your Twitchpoint instance's drop progress, campaign ETA and next game on six keys. | [Docs](twitchpoint/README.md) [Link - Unpublished](https://github.com/FadingToJosh/twitchpoint/tree/main/streamdeck)|
-| **GitHub Tracker** | Shows new commits and releases on the repositories you follow, and lets you mark them seen. | [Docs, token guide and demo](github-tracker/README.md) |
+| **Repo Watch** | Shows new commits and releases on the GitHub repositories you follow, and lets you mark them seen. | [Docs, token guide and demo](repo-watch/README.md) |
 
 ## Get help
 
@@ -18,7 +18,7 @@ Help, documentation and issue tracking for my Stream Deck plugins. Source code i
 
 ## Privacy
 
-Each plugin has its own privacy policy: [Fishing](fishing/PRIVACY.md) · [Fishing Pro](fishing-pro/PRIVACY.md) · [ActivelyPlaying](actively-playing/PRIVACY.md) · [Twitchpoint](twitchpoint/PRIVACY.md) · [GitHub Tracker](github-tracker/PRIVACY.md).
+Each plugin has its own privacy policy: [Fishing](fishing/PRIVACY.md) · [Fishing Pro](fishing-pro/PRIVACY.md) · [ActivelyPlaying](actively-playing/PRIVACY.md) · [Twitchpoint](twitchpoint/PRIVACY.md) · [Repo Watch](repo-watch/PRIVACY.md).
 
 ---
 

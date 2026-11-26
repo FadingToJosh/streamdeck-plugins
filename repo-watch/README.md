@@ -1,14 +1,14 @@
-# GitHub Tracker for Stream Deck: help and support
+# Repo Watch for Stream Deck: help and support
 
-GitHub Tracker is a Stream Deck plugin that tells you when repositories you follow have **new commits or releases you haven't seen yet**. Press a key to open what changed, and hold it to mark it seen.
+Repo Watch is a Stream Deck plugin that tells you when GitHub repositories you follow have **new commits or releases you haven't seen yet**. Press a key to open what changed, and hold it to mark it seen.
 
 This folder holds the plugin's documentation. Support for all of FadingToJosh's Stream Deck plugins goes through this repository's issues. The plugin's source code isn't published here.
 
-**Try it in your browser:** [interactive demo](https://fadingtojosh.github.io/streamdeck-plugins/github-tracker/demo/) (a simulation that uses the plugin's real key drawing).
+**Try it in your browser:** [interactive demo](https://fadingtojosh.github.io/streamdeck-plugins/repo-watch/demo/) (a simulation that uses the plugin's real key drawing).
 
 ## Get help
 
-- **Something isn't working?** [Open a bug report](https://github.com/FadingToJosh/streamdeck-plugins/issues/new?template=bug_report.yml). Check [existing GitHub Tracker issues](https://github.com/FadingToJosh/streamdeck-plugins/issues?q=is%3Aissue+%22GitHub+Tracker%22) first.
+- **Something isn't working?** [Open a bug report](https://github.com/FadingToJosh/streamdeck-plugins/issues/new?template=bug_report.yml). Check [existing Repo Watch issues](https://github.com/FadingToJosh/streamdeck-plugins/issues?q=is%3Aissue+%22Repo+Watch%22) first.
 - **Idea or question?** [Open a feature request or question](https://github.com/FadingToJosh/streamdeck-plugins/issues/new?template=feature_request.yml).
 - **Never paste your token** into an issue. If you think you've exposed it, revoke it in your [GitHub token settings](https://github.com/settings/personal-access-tokens) and make a new one.
 
@@ -41,4 +41,4 @@ The plugin collects no data. It talks only to GitHub's API. See [PRIVACY.md](PRI
 
 ---
 
-GitHub Tracker is an independent project. It is not affiliated with or endorsed by GitHub, Inc. or Elgato. GitHub is a trademark of GitHub, Inc.
+Repo Watch is an independent project. It is not affiliated with or endorsed by GitHub, Inc. or Elgato. GitHub is a trademark of GitHub, Inc.

@@ -7,8 +7,8 @@ _Machine-translated from the [English guide](en.md)._
 请使用**细粒度（fine-grained）**令牌。与经典令牌不同，它可以限制为只读。GitHub 界面为英文，因此下面的字段名保留英文原文。
 
 1. 打开 [Settings → Developer settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/personal-access-tokens)，点击 **Generate new token**。
-   （[这个链接](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20GitHub%20Tracker&contents=read)会预先填好名称和 Contents 权限，其他字段仍需自行检查。）
-2. **Token name**：一个便于识别的名称，例如 `Stream Deck GitHub Tracker`。
+   （[这个链接](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20Repo%20Watch&contents=read)会预先填好名称和 Contents 权限，其他字段仍需自行检查。）
+2. **Token name**：一个便于识别的名称，例如 `Stream Deck Repo Watch`。
 3. **Expiration**（有效期）：选择一个期限。令牌过期后，按键会显示“令牌被拒绝 (401)”，直到你粘贴新令牌。期限越短越安全。如果组织没有禁止，也可以选择“No expiration”。
 4. **Resource owner**：你的账号，或拥有这些私有仓库的组织。一个令牌只能对应一个所有者。如果组织要求审批，在管理员批准之前，令牌只能读取公开仓库。
 5. **Repository access**：

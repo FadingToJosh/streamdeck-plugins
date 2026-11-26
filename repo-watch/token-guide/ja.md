@@ -7,8 +7,8 @@ _Machine-translated from the [English guide](en.md)._
 **Fine-grained** トークンを使ってください。クラシックトークンと違い、読み取り専用に制限できます。GitHub の画面は英語のため、項目名は英語のまま記載しています。
 
 1. [Settings → Developer settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/personal-access-tokens) を開き、**Generate new token** をクリックします。
-   （[このリンク](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20GitHub%20Tracker&contents=read)を使うと名前と Contents 権限が入力済みになります。他の項目は自分で確認してください。）
-2. **Token name**：分かりやすい名前。例：`Stream Deck GitHub Tracker`。
+   （[このリンク](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20Repo%20Watch&contents=read)を使うと名前と Contents 権限が入力済みになります。他の項目は自分で確認してください。）
+2. **Token name**：分かりやすい名前。例：`Stream Deck Repo Watch`。
 3. **Expiration**（有効期限）：期間を選びます。期限が切れると、新しいトークンを貼り付けるまでキーに「トークン拒否 (401)」と表示されます。短いほど安全です。組織が禁止していなければ「No expiration」も選べます。
 4. **Resource owner**：自分のアカウント、または非公開リポジトリを所有する組織。1 つのトークンが対象にできる所有者は 1 つだけです。組織が承認を必須にしている場合、管理者が承認するまでトークンは公開リポジトリしか読めません。
 5. **Repository access**：

@@ -5,8 +5,8 @@ You don't need a token if every repo you track is public. Without one, GitHub al
 Use a **fine-grained** personal access token. It can be limited to read-only access, unlike a classic token.
 
 1. Open [Settings → Developer settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/personal-access-tokens) and click **Generate new token**.
-   ([This link](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20GitHub%20Tracker&contents=read) pre-fills the name and the Contents permission. You still need to check the other fields.)
-2. **Token name**: something you'll recognize, for example `Stream Deck GitHub Tracker`.
+   ([This link](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20Repo%20Watch&contents=read) pre-fills the name and the Contents permission. You still need to check the other fields.)
+2. **Token name**: something you'll recognize, for example `Stream Deck Repo Watch`.
 3. **Expiration**: choose one. When it expires, tiles show `Token rejected (401)` until you paste a new one. A shorter expiry is safer. "No expiration" is allowed unless your organization blocks it.
 4. **Resource owner**: your account, or the organization that owns the private repos you want to track. A token covers one owner. If an organization requires approval, the token can only read public repos until an admin approves it.
 5. **Repository access**:

@@ -16,7 +16,7 @@ body:
     id: plugin
     attributes:
       label: Which plugin?
-      options: [Fishing, Fishing Pro, ActivelyPlaying, Twitchpoint, GitHub Tracker]
+      options: [Fishing, Fishing Pro, ActivelyPlaying, Twitchpoint, Repo Watch]
     validations:
       required: true
   - type: input
@@ -42,12 +42,12 @@ body:
   - type: dropdown
     id: token
     attributes:
-      label: "GitHub Tracker only: are you using a token?"
-      options: [Not using GitHub Tracker, No, "Yes, fine-grained", "Yes, classic"]
+      label: "Repo Watch only: are you using a token?"
+      options: [Not using Repo Watch, No, "Yes, fine-grained", "Yes, classic"]
   - type: input
     id: repo
     attributes:
-      label: "GitHub Tracker only: repo you're tracking (if public)"
+      label: "Repo Watch only: repo you're tracking (if public)"
       placeholder: owner/repo
   - type: textarea
     id: logs

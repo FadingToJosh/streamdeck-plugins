@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GitHub Tracker demo</title>
-<meta name="description" content="Interactive simulation of the GitHub Tracker Stream Deck plugin: push commits and releases to sandbox repos and watch the keys react.">
+<title>Repo Watch demo</title>
+<meta name="description" content="Interactive simulation of the Repo Watch Stream Deck plugin: push commits and releases to sandbox repos and watch the keys react.">
 <link rel="icon" href="icon.svg">
 <style>
 :root {
@@ -112,10 +112,10 @@ body.video * { transition: none !important; }
 <div class="wrap">
 	<header class="top">
 		<img src="icon.svg" alt="">
-		<h1>GitHub Tracker <span>for Stream Deck</span></h1>
+		<h1>Repo Watch <span>for Stream Deck</span></h1>
 		<span class="pill">Simulation</span>
 		<nav>
-			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/github-tracker">Help &amp; support</a>
+			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/repo-watch">Help &amp; support</a>
 			<a href="#real">Try it for real</a>
 		</nav>
 	</header>
@@ -166,7 +166,7 @@ body.video * { transition: none !important; }
 		</div>
 	</section>
 
-	<footer>GitHub Tracker is an independent, open-source project. It is not affiliated with or endorsed by GitHub, Inc. or Elgato. GitHub is a trademark of GitHub, Inc.</footer>
+	<footer>Repo Watch is an independent, open-source project. It is not affiliated with or endorsed by GitHub, Inc. or Elgato. GitHub is a trademark of GitHub, Inc.</footer>
 </div>
 
 <div id="caption"></div>
@@ -433,8 +433,8 @@ function showCard(kind) {
 	const c = $("card");
 	Object.assign(card, { shown: true, at: sim.now });
 	c.innerHTML = kind === "intro"
-		? `<img src="icon.svg" alt=""><h2>GitHub Tracker</h2><p>A Stream Deck plugin for new commits and releases</p><div class="note">Simulated demo · keys drawn by the plugin's real renderer</div>`
-		: `<img src="icon.svg" alt=""><h2>GitHub Tracker</h2><ul><li>Commits and releases tracked separately</li><li>One alert key for every repo you follow</li><li>Hold to mark seen · Stream Deck + and Neo supported</li><li>Public repos work without a token</li></ul>`;
+		? `<img src="icon.svg" alt=""><h2>Repo Watch</h2><p>A Stream Deck plugin for new GitHub commits and releases</p><div class="note">Simulated demo · keys drawn by the plugin's real renderer</div>`
+		: `<img src="icon.svg" alt=""><h2>Repo Watch</h2><ul><li>Commits and releases tracked separately</li><li>One alert key for every repo you follow</li><li>Hold to mark seen · Stream Deck + and Neo supported</li><li>Public repos work without a token</li></ul>`;
 }
 function hideCard() { Object.assign(card, { shown: false, at: sim.now }); }
 

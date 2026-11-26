@@ -7,8 +7,8 @@ Für öffentliche Repos brauchst du kein Token. Ohne Token erlaubt GitHub 60 Anf
 Verwende ein **Fine-grained**-Token. Es lässt sich auf Lesezugriff beschränken, ein klassisches Token nicht. Die GitHub-Oberfläche ist auf Englisch, deshalb stehen die Bezeichnungen unten im englischen Original.
 
 1. Öffne [Settings → Developer settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/personal-access-tokens) und klicke auf **Generate new token**.
-   ([Dieser Link](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20GitHub%20Tracker&contents=read) füllt Name und Contents-Berechtigung vor; prüfe die übrigen Felder trotzdem.)
-2. **Token name**: ein Name, den du wiedererkennst, z. B. `Stream Deck GitHub Tracker`.
+   ([Dieser Link](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20Repo%20Watch&contents=read) füllt Name und Contents-Berechtigung vor; prüfe die übrigen Felder trotzdem.)
+2. **Token name**: ein Name, den du wiedererkennst, z. B. `Stream Deck Repo Watch`.
 3. **Expiration** (Ablauf): wähle einen Zeitraum. Nach Ablauf zeigen die Tasten „Token abgelehnt (401)“, bis du ein neues Token einfügst. Kürzer ist sicherer. „No expiration“ ist erlaubt, sofern deine Organisation es nicht verbietet.
 4. **Resource owner**: dein Konto oder die Organisation, der die privaten Repos gehören. Ein Token gilt für genau einen Eigentümer. Verlangt eine Organisation eine Freigabe, kann das Token bis dahin nur öffentliche Repos lesen.
 5. **Repository access**:

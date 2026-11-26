@@ -7,8 +7,8 @@ _Machine-translated from the [English guide](en.md)._
 Используйте **fine-grained** токен: в отличие от классического, его можно ограничить только чтением. Интерфейс GitHub на английском, поэтому названия полей приведены по-английски.
 
 1. Откройте [Settings → Developer settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/personal-access-tokens) и нажмите **Generate new token**.
-   ([Эта ссылка](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20GitHub%20Tracker&contents=read) заранее заполняет имя и разрешение Contents; остальные поля всё равно проверьте.)
-2. **Token name**: понятное имя, например `Stream Deck GitHub Tracker`.
+   ([Эта ссылка](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20Repo%20Watch&contents=read) заранее заполняет имя и разрешение Contents; остальные поля всё равно проверьте.)
+2. **Token name**: понятное имя, например `Stream Deck Repo Watch`.
 3. **Expiration** (срок действия): выберите срок. Когда он истечёт, на кнопках будет «Токен отклонён (401)», пока вы не вставите новый. Чем короче срок, тем безопаснее. «No expiration» допускается, если это не запрещено вашей организацией.
 4. **Resource owner**: ваш аккаунт или организация, которой принадлежат приватные репозитории. Один токен работает только с одним владельцем. Если организация требует одобрения, до одобрения администратором токен сможет читать только публичные репозитории.
 5. **Repository access**:

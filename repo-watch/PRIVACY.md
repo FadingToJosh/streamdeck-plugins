@@ -1,8 +1,10 @@
-# Privacy policy: GitHub Tracker for Stream Deck
+# Privacy policy: Repo Watch for Stream Deck
+
+Repo Watch is a Stream Deck plugin that tracks GitHub repositories. It is not affiliated with or endorsed by GitHub, Inc.
 
 _Last updated: 2026-11-25_
 
-GitHub Tracker does not collect, sell, or share any personal data, and it contains no analytics, telemetry, or ads.
+Repo Watch does not collect, sell, or share any personal data, and it contains no analytics, telemetry, or ads.
 
 **What it stores, and where.** The list of repositories you track, what you've marked as seen, your polling interval, your language choice, and (if you add one) your GitHub personal access token. All of it is kept in Stream Deck's own plugin settings on your computer. The token is never shown back in the settings panel and is never sent anywhere except GitHub.
 

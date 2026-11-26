@@ -7,8 +7,8 @@ Si tous vos dépôts sont publics, aucun jeton n'est nécessaire. Sans jeton, Gi
 Utilisez un jeton **fine-grained** : contrairement à un jeton classique, il peut être limité à la lecture seule. L'interface de GitHub est en anglais, les libellés sont donc indiqués en anglais.
 
 1. Ouvrez [Settings → Developer settings → Personal access tokens → Fine-grained tokens](https://github.com/settings/personal-access-tokens) et cliquez sur **Generate new token**.
-   ([Ce lien](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20GitHub%20Tracker&contents=read) préremplit le nom et l'autorisation Contents ; vérifiez quand même les autres champs.)
-2. **Token name** : un nom reconnaissable, par exemple `Stream Deck GitHub Tracker`.
+   ([Ce lien](https://github.com/settings/personal-access-tokens/new?name=Stream%20Deck%20Repo%20Watch&contents=read) préremplit le nom et l'autorisation Contents ; vérifiez quand même les autres champs.)
+2. **Token name** : un nom reconnaissable, par exemple `Stream Deck Repo Watch`.
 3. **Expiration** : choisissez une durée. À l'expiration, les touches affichent « Jeton refusé (401) » jusqu'à ce que vous colliez un nouveau jeton. Une durée courte est plus sûre. « No expiration » est autorisé sauf si votre organisation l'interdit.
 4. **Resource owner** : votre compte, ou l'organisation propriétaire des dépôts privés. Un jeton ne couvre qu'un seul propriétaire. Si l'organisation exige une approbation, le jeton ne pourra lire que les dépôts publics tant qu'un administrateur ne l'a pas approuvé.
 5. **Repository access** :
