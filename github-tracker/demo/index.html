@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Tracker demo</title>
+<meta name="description" content="Interactive simulation of the GitHub Tracker Stream Deck plugin: push commits and releases to sandbox repos and watch the keys react.">
+<link rel="icon" href="icon.svg">
+<style>
+:root {
+	--bg: #0b0e14; --panel: #141923; --panel-2: #1a2030; --line: #2a3140;
+	--fg: #eef1f6; --muted: #8b94a7; --commit: #34d1bf; --release: #ffb938; --signal: #ff7a45; --ok: #7ee081;
+	--radius: 16px; --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--commit); }
+button { font: inherit; color: inherit; cursor: pointer; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+header.top { display: flex; align-items: center; gap: 14px; padding: 22px 0; flex-wrap: wrap; }
+header.top img { width: 44px; height: 44px; }
+header.top h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+header.top h1 span { color: var(--muted); font-weight: 500; }
+.pill { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--signal); color: var(--signal); }
+header.top nav { margin-left: auto; display: flex; gap: 18px; font-size: 14px; }
+header.top nav a { color: var(--muted); text-decoration: none; }
+header.top nav a:hover { color: var(--fg); }
+
+.intro { padding: 8px 0 24px; max-width: 760px; }
+.intro h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.02em; }
+.intro p { color: var(--muted); margin: 0; font-size: 17px; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
+@media (max-width: 980px) { .stage { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.panel h3 { margin: 0 0 4px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.panel .sub { margin: 0 0 16px; font-size: 14px; color: var(--muted); }
+
+.repo { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; background: var(--panel-2); }
+.repo .name { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+.repo .stats { font-size: 13px; color: var(--muted); margin: 2px 0 12px; }
+.repo .stats b { color: var(--fg); font-weight: 600; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: #222a3b; border-radius: 9px; padding: 7px 12px; font-size: 14px; font-weight: 600; transition: transform .08s, background .15s; }
+.btn:hover { background: #2a3347; }
+.btn:active, .btn.flash { transform: scale(.96); background: #34405a; }
+.btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.btn.commit .dot { background: var(--commit); }
+.btn.release .dot { background: var(--release); }
+
+.poll { display: flex; align-items: center; gap: 12px; margin: 16px 0 12px; font-size: 14px; color: var(--muted); }
+.bar { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--muted); }
+.log { font-family: var(--mono); font-size: 12.5px; color: var(--muted); background: #0f131b; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 150px; overflow: hidden; margin: 0; list-style: none; }
+.log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log .c { color: var(--commit); } .log .r { color: var(--release); } .log .s { color: var(--signal); } .log .k { color: var(--fg); }
+
+.deck { background: linear-gradient(180deg, #232a38, #161b25); border: 1px solid #333c4f; border-radius: 26px; padding: 22px; box-shadow: 0 30px 60px -30px #000, inset 0 1px 0 #ffffff14; }
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.key { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #0d1016; box-shadow: 0 0 0 1px #00000080, 0 3px 0 #0a0c11; transition: transform .08s; touch-action: none; user-select: none; -webkit-user-select: none; }
+.key img { width: 100%; height: 100%; display: block; pointer-events: none; }
+.key.live { cursor: pointer; }
+.key.down { transform: translateY(2px) scale(.97); }
+.key svg.ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.key svg.ring circle { fill: none; stroke: #ffffffd0; stroke-width: 5; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.legend b { color: var(--fg); }
+.strips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 18px; align-items: start; }
+@media (max-width: 600px) { .strips { grid-template-columns: 1fr 1fr; } }
+.strip { border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px #00000080; }
+.strip img { width: 100%; display: block; }
+.striplabel { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.toast { min-height: 48px; margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); font-size: 14px; color: var(--muted); transition: border-color .2s; }
+.toast.on { border-color: var(--signal); color: var(--fg); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 13px; }
+
+section.more { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0; }
+@media (max-width: 980px) { section.more { grid-template-columns: 1fr; } }
+section.more h4 { margin: 0 0 8px; font-size: 17px; }
+section.more p, section.more li { color: var(--muted); font-size: 15px; }
+section.more ol { padding-left: 20px; margin: 0; }
+code { font-family: var(--mono); font-size: .9em; background: #ffffff10; padding: 1px 5px; border-radius: 5px; color: var(--fg); }
+footer { border-top: 1px solid var(--line); padding: 20px 0 40px; font-size: 13px; color: var(--muted); }
+
+/* Video capture layout (?video): fixed 1920x1080 stage with captions and a pointer. */
+body.video { width: 1920px; height: 1080px; overflow: hidden; }
+body.video .wrap { max-width: none; padding: 0 90px; }
+body.video header.top { padding: 40px 0 10px; }
+body.video header.top nav, body.video section.more, body.video footer, body.video .intro, body.video .row select { display: none; }
+body.video .stage { grid-template-columns: 620px 1fr; gap: 48px; margin-top: 26px; }
+body.video .stage > .panel:last-child > .row, body.video .strips { display: none; }
+body.video .deck { max-width: 980px; margin: 0 auto; padding: 18px; }
+body.video .legend { max-width: 980px; margin: 14px auto 0; font-size: 15px; }
+body.video .toast { max-width: 980px; margin: 14px auto 0; font-size: 17px; }
+body.video .log { height: 190px; font-size: 14px; }
+#caption { display: none; }
+body.video #caption { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 150px; line-height: 150px; text-align: center; font-size: 44px; font-weight: 700; letter-spacing: -0.01em; background: linear-gradient(180deg, #0b0e1400, #0b0e14 35%); }
+#pointer { display: none; position: absolute; width: 34px; height: 34px; margin: -6px 0 0 -6px; z-index: 10; pointer-events: none; }
+body.video #pointer { display: block; }
+#card { display: none; }
+body.video #card { position: absolute; inset: 0; z-index: 20; background: radial-gradient(1200px 700px at 50% 40%, #1a2131, #0b0e14); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+body.video * { transition: none !important; }
+#card img { width: 200px; height: 200px; }
+#card h2 { font-size: 72px; margin: 28px 0 8px; letter-spacing: -0.03em; }
+#card p { font-size: 32px; color: var(--muted); margin: 0; }
+#card ul { list-style: none; padding: 0; margin: 34px 0 0; font-size: 30px; color: var(--fg); line-height: 1.7; }
+#card .note { margin-top: 36px; font-size: 22px; color: var(--signal); }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<header class="top">
+		<img src="icon.svg" alt="">
+		<h1>GitHub Tracker <span>for Stream Deck</span></h1>
+		<span class="pill">Simulation</span>
+		<nav>
+			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/github-tracker">Help &amp; support</a>
+			<a href="#real">Try it for real</a>
+		</nav>
+	</header>
+
+	<div class="intro">
+		<h2>Know when a repo changed since you last looked.</h2>
+		<p>Push commits or publish a release in the sandbox on the left. On the next check, the keys on the right light up. Press and hold them the way you would on a real Stream Deck.</p>
+	</div>
+
+	<div class="stage">
+		<div class="panel" id="sandbox">
+			<h3>Sandbox repositories</h3>
+			<p class="sub">Pretend activity on two repos. Nothing here touches GitHub.</p>
+			<div id="repos"></div>
+			<div class="poll"><span id="pollText">Next check in 6 s</span><div class="bar"><i id="pollBar"></i></div><button class="btn" id="checkNow">Check now</button></div>
+			<ul class="log" id="log"></ul>
+		</div>
+
+		<div class="panel">
+			<div class="row"><h3>Your Stream Deck</h3><select id="lang" aria-label="Key language"></select></div>
+			<div class="deck"><div class="grid" id="grid"></div></div>
+			<div class="legend"><span><b>Click</b> = press</span><span><b>Hold ½ s</b> = mark as seen</span><span>Checks are sped up here · the plugin checks hourly by default</span></div>
+			<div class="strips">
+				<div><div class="strip"><img id="strip0" alt="Touch strip, Repo Tracker"></div><div class="striplabel">Stream Deck + dial: Repo Tracker</div></div>
+				<div><div class="strip"><img id="strip1" alt="Touch strip, Update Alert"></div><div class="striplabel">Stream Deck + dial: Update Alert</div></div>
+				<div><div class="strip"><img id="infobar" alt="Neo Infobar, Update Alert"></div><div class="striplabel">Stream Deck Neo Infobar: Update Alert</div></div>
+			</div>
+			<div class="toast" id="toast">Waiting for something to happen…</div>
+		</div>
+	</div>
+
+	<section class="more">
+		<div>
+			<h4>What's simulated</h4>
+			<p>The keys are drawn by the plugin's own rendering code, so they look exactly like the real thing. The repos, the polling, and the browser links are faked. On a real deck, pressing a key with changes opens the compare view or releases page in your browser.</p>
+		</div>
+		<div id="real">
+			<h4>Try it for real</h4>
+			<ol>
+				<li>Create an empty public repo, e.g. <code>tracker-playground</code>.</li>
+				<li>Add <code>you/tracker-playground</code> to a Repo Tracker key and set <b>Check every</b> to 5 minutes.</li>
+				<li>Commit a file on github.com, or publish a release, and wait for the next check.</li>
+			</ol>
+		</div>
+		<div>
+			<h4>How it counts</h4>
+			<p>When you add a repo, everything already there counts as seen. Commits on the default branch and releases are counted separately. Holding a key records the current state as seen.</p>
+		</div>
+	</section>
+
+	<footer>GitHub Tracker is an independent, open-source project. It is not affiliated with or endorsed by GitHub, Inc. or Elgato. GitHub is a trademark of GitHub, Inc.</footer>
+</div>
+
+<div id="caption"></div>
+<svg id="pointer" viewBox="0 0 34 34"><path d="M6 4l22 12-10 2.5L13 28z" fill="#fff" stroke="#0b0e14" stroke-width="2" stroke-linejoin="round"/></svg>
+<div id="card"></div>
+
+<script src="render.js"></script>
+<script>
+"use strict";
+const R = window.TrackerRender;
+const HOLD_MS = 500, TOTALS_MS = 3000, CYCLE_MS = 8000, POLL_MS = 6000;
+const params = new URLSearchParams(location.search);
+const VIDEO = params.has("video");
+if (VIDEO) document.body.classList.add("video");
+
+// ---- simulation ------------------------------------------------------------------------------
+const stepIndex = (i, n) => (n <= 0 ? null : i === null ? 0 : i + 1 >= n ? null : i + 1);
+const indexAfterClear = (i, remaining) => (remaining <= 0 ? null : i < remaining ? i : null);
+
+function makeRepo(name, commits, releases, tag) {
+	return { name, remoteC: commits, remoteR: releases, polledC: commits, polledR: releases, seenC: commits, seenR: releases, tag, totalsUntil: 0 };
+}
+const sim = {
+	now: 0,
+	repos: [makeRepo("you/demo-app", 148, 6, [1, 4, 0]), makeRepo("team/api-server", 2310, 41, [3, 12, 2])],
+	nextPoll: POLL_MS,
+	alert: { index: null, until: 0 },
+	pressing: {},
+	log: [],
+	toast: null,
+};
+const summary = (r) => ({ key: r.name, name: r.name, watch: "both", unseenCommits: r.polledC - r.seenC, commitsExact: true, unseenReleases: r.polledR - r.seenR, totalCommits: r.polledC, totalReleases: r.polledR, intro: false, pending: false });
+const hasNew = (r) => r.polledC > r.seenC || r.polledR > r.seenR;
+const changed = () => sim.repos.filter(hasNew);
+
+function log(html) { sim.log.unshift(html); sim.log.length = Math.min(sim.log.length, 12); }
+function toast(text) { sim.toast = { text, at: sim.now }; }
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
+function poll() {
+	const found = [];
+	for (const r of sim.repos) {
+		const c = r.remoteC - r.polledC, rel = r.remoteR - r.polledR;
+		r.polledC = r.remoteC; r.polledR = r.remoteR;
+		if (c) found.push(`<span class="c">${plural(c, "new commit")}</span> on ${r.name}`);
+		if (rel) found.push(`<span class="r">${plural(rel, "new release")}</span> on ${r.name}`);
+	}
+	log(found.length ? `check: ${found.join(", ")}` : "check: nothing new");
+	if (sim.nextPoll !== Infinity) sim.nextPoll = sim.now + POLL_MS;
+}
+
+const act = {
+	push(i, n = 1) { sim.repos[i].remoteC += n; log(`<span class="k">${sim.repos[i].name}</span>: pushed ${plural(n, "commit")}`); },
+	release(i) {
+		const r = sim.repos[i]; r.remoteR += 1; r.tag[1] += 1; r.tag[2] = 0;
+		log(`<span class="k">${r.name}</span>: published <span class="r">v${r.tag.join(".")}</span>`);
+	},
+	checkNow() { poll(); },
+	press(id) {
+		if (id === "alert") {
+			const list = changed();
+			if (!list.length) { sim.alert.index = null; return toast("Nothing new. Every tracked repo is up to date."); }
+			sim.alert.index = stepIndex(sim.alert.index, list.length);
+			sim.alert.until = sim.now + CYCLE_MS;
+			return toast(sim.alert.index === null ? "Back to the summary." : `Showing ${sim.alert.index + 1} of ${list.length}: ${list[sim.alert.index].name}. Press again for the next one, hold to mark it seen.`);
+		}
+		const r = sim.repos[id], s = summary(r);
+		if (hasNew(r)) {
+			const what = s.unseenCommits ? "the compare view of the new commits" : "the releases page";
+			r.totalsUntil = 0;
+			return toast(`On a real deck this opens ${what} for ${r.name} in your browser.`);
+		}
+		if (r.totalsUntil > sim.now) { r.totalsUntil = 0; return toast(`On a real deck this opens ${r.name} in your browser.`); }
+		r.totalsUntil = sim.now + TOTALS_MS;
+		toast(`Nothing new on ${r.name}, so the key shows its totals for 3 seconds.`);
+	},
+	hold(id) {
+		if (id === "alert") {
+			const list = changed();
+			if (sim.alert.index === null || !list[sim.alert.index]) {
+				list.forEach(see);
+				sim.alert.index = null;
+				log(`<span class="s">all repos marked seen</span>`);
+				return toast("Marked every repo as seen.");
+			}
+			const r = list[sim.alert.index]; see(r);
+			sim.alert.index = indexAfterClear(sim.alert.index, changed().length);
+			sim.alert.until = sim.now + CYCLE_MS;
+			log(`<span class="s">${r.name} marked seen</span>`);
+			return toast(`Marked ${r.name} as seen. The alert moves on to the next repo with changes.`);
+		}
+		const r = sim.repos[id]; see(r); r.totalsUntil = 0;
+		log(`<span class="s">${r.name} marked seen</span>`);
+		toast(`Marked ${r.name} as seen.`);
+	},
+	keyDown(id) { sim.pressing[id] = { at: sim.now, held: false }; },
+	keyUp(id) {
+		const p = sim.pressing[id]; delete sim.pressing[id];
+		if (p && !p.held) act.press(id);
+	},
+};
+function see(r) { r.seenC = r.polledC; r.seenR = r.polledR; }
+
+function advance(t) {
+	while (sim.nextPoll <= t) { sim.now = sim.nextPoll; poll(); }
+	sim.now = t;
+	for (const [id, p] of Object.entries(sim.pressing)) {
+		if (!p.held && t - p.at >= HOLD_MS) { p.held = true; act.hold(id === "alert" ? id : Number(id)); }
+	}
+	if (sim.alert.index !== null && t >= sim.alert.until) sim.alert.index = null;
+	const n = changed().length;
+	if (sim.alert.index !== null && sim.alert.index >= n) sim.alert.index = null;
+}
+
+// ---- view ------------------------------------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+const keys = [{ id: 0, slot: 0, tag: "Repo Tracker" }, { id: 1, slot: 1, tag: "Repo Tracker" }, { id: "alert", slot: 4, tag: "Update Alert" }];
+const grid = $("grid"), keyEls = {};
+for (let slot = 0; slot < 15; slot++) {
+	const def = keys.find((k) => k.slot === slot);
+	const el = document.createElement("div");
+	el.className = "key" + (def ? " live" : "");
+	if (def) {
+		el.innerHTML = `<img alt=""><svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" pathLength="100" stroke-dasharray="0 100"/></svg>`;
+		el.dataset.key = def.id;
+		keyEls[def.id] = el;
+		if (!VIDEO) bindKey(el, def.id);
+	}
+	grid.appendChild(el);
+}
+function bindKey(el, id) {
+	el.addEventListener("pointerdown", (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); act.keyDown(id); });
+	const up = () => { if (sim.pressing[id]) act.keyUp(id); };
+	el.addEventListener("pointerup", up);
+	el.addEventListener("pointercancel", () => delete sim.pressing[id]);
+	el.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
+const reposEl = $("repos");
+sim.repos.forEach((r, i) => {
+	const d = document.createElement("div");
+	d.className = "repo";
+	d.innerHTML = `<div class="name">${r.name}</div><div class="stats" id="stats${i}"></div><div class="actions">
+		<button class="btn commit" data-a="push" data-i="${i}" data-n="1"><span class="dot"></span>Push a commit</button>
+		<button class="btn commit" data-a="push" data-i="${i}" data-n="3"><span class="dot"></span>Push 3</button>
+		<button class="btn release" data-a="release" data-i="${i}"><span class="dot"></span>Publish release</button></div>`;
+	reposEl.appendChild(d);
+});
+reposEl.addEventListener("click", (e) => {
+	const b = e.target.closest("button"); if (!b || VIDEO) return;
+	act[b.dataset.a](Number(b.dataset.i), Number(b.dataset.n || 1));
+});
+$("checkNow").addEventListener("click", () => !VIDEO && act.checkNow());
+
+const langSel = $("lang");
+const LANG_NAMES = { en: "English", de: "Deutsch", es: "Español", fr: "Français", ja: "日本語", ko: "한국어", pt: "Português", ru: "Русский", zh_CN: "简体中文" };
+for (const l of R.LANGUAGES) langSel.add(new Option(`Keys: ${LANG_NAMES[l] || l}`, l));
+langSel.addEventListener("change", () => { R.setLanguage(langSel.value); cache.clear(); });
+
+const cache = new Map();
+function setImg(img, svg) {
+	if (cache.get(img) === svg) return;
+	cache.set(img, svg);
+	img.src = R.svgUrl(svg);
+}
+function render() {
+	sim.repos.forEach((r, i) => {
+		const s = summary(r);
+		setImg(keyEls[i].querySelector("img"), r.totalsUntil > sim.now ? R.renderTotalsKey(s) : R.renderRepoKey(s, r.name));
+		$(`stats${i}`).innerHTML = `Remote: <b>${r.remoteC.toLocaleString("en")}</b> commits · <b>${r.remoteR}</b> releases · latest v${r.tag.join(".")}`;
+	});
+	const list = changed();
+	const a = sim.alert.index;
+	setImg(keyEls.alert.querySelector("img"), a === null ? R.renderAlertKey(list.length, sim.repos.length) : R.renderRepoKey(summary(list[a]), list[a].name, `${a + 1}/${list.length}`));
+	const r0 = sim.repos[0];
+	setImg($("strip0"), r0.totalsUntil > sim.now ? R.renderTotalsStrip(summary(r0)) : R.renderRepoStrip(summary(r0), r0.name));
+	setImg($("infobar"), a === null ? R.renderAlertInfobar(list.length, sim.repos.length) : R.renderAlertInfobar(list.length, sim.repos.length, undefined, summary(list[a]), `${a + 1}/${list.length}`));
+	setImg($("strip1"), a === null ? R.renderAlertStrip(list.length, sim.repos.length) : R.renderRepoStrip(summary(list[a]), list[a].name, `${a + 1}/${list.length}`));
+	for (const [id, el] of Object.entries(keyEls)) {
+		const p = sim.pressing[id];
+		el.classList.toggle("down", !!p);
+		const frac = p && !p.held ? Math.min(1, (sim.now - p.at) / HOLD_MS) : 0;
+		const c = el.querySelector("circle"); c.setAttribute("stroke-dasharray", `${frac * 100} 100`); c.style.opacity = frac > 0 ? 1 : 0;
+	}
+	const left = Math.max(0, sim.nextPoll - sim.now);
+	$("pollText").textContent = left === Infinity ? "Checks run on demand in this tour" : `Next check in ${Math.ceil(left / 1000)} s`;
+	$("pollBar").style.width = left === Infinity ? "0%" : `${100 - (left / POLL_MS) * 100}%`;
+	$("log").innerHTML = sim.log.map((l) => `<li>${l}</li>`).join("");
+	const t = $("toast");
+	if (sim.toast) { t.textContent = sim.toast.text; t.classList.toggle("on", sim.now - sim.toast.at < 2500); }
+}
+
+// ---- scripted tour (used for the video, and for ?autoplay) -----------------------------------
+const tour = [];
+let at = 0;
+const step = (ms, fn) => { at += ms; tour.push({ t: at, fn }); };
+const say = (text) => step(0, () => setCaption(text));
+const click = (sel, fn, wait = 900) => { step(0, () => aim(sel)); step(wait, () => { flashBtn(sel); fn(); }); };
+const holdKey = (id, ms = 700) => { step(0, () => aim(`[data-key="${id}"]`)); step(800, () => act.keyDown(id)); step(ms, () => act.keyUp(id)); };
+const tapKey = (id) => { step(0, () => aim(`[data-key="${id}"]`)); step(800, () => act.keyDown(id)); step(140, () => act.keyUp(id)); };
+function buildTour() {
+	step(0, () => showCard("intro"));
+	step(3200, () => hideCard());
+	say("Track any repo. Only changes after you add it count.");
+	step(2600, () => {});
+	say("Someone pushes two commits…");
+	click('[data-a="push"][data-i="0"][data-n="1"]', () => act.push(0, 1));
+	click('[data-a="push"][data-i="0"][data-n="1"]', () => act.push(0, 1), 500);
+	step(400, () => aim("#checkNow"));
+	say("…and the next check lights up the key.");
+	step(900, () => { flashBtn("#checkNow"); act.checkNow(); });
+	step(2600, () => {});
+	say("Releases get their own badge.");
+	click('[data-a="release"][data-i="1"]', () => act.release(1));
+	step(400, () => aim("#checkNow"));
+	step(900, () => { flashBtn("#checkNow"); act.checkNow(); });
+	step(2400, () => {});
+	say("The alert key counts every repo with something new.");
+	step(2200, () => {});
+	say("Press it to cycle through them.");
+	tapKey("alert");
+	step(1600, () => {});
+	tapKey("alert");
+	step(1800, () => {});
+	say("Hold any key to mark it seen.");
+	holdKey(0, 900);
+	step(1800, () => {});
+	say("More changes come in…");
+	click('[data-a="push"][data-i="0"][data-n="3"]', () => act.push(0, 3));
+	step(400, () => aim("#checkNow"));
+	step(900, () => { flashBtn("#checkNow"); act.checkNow(); });
+	step(1600, () => {});
+	say("Hold the alert on its count to clear everything at once.");
+	holdKey("alert", 900);
+	step(1600, () => {});
+	say("Nothing new? Press for the repo's totals.");
+	tapKey(1);
+	step(3200, () => setCaption(""));
+	step(200, () => showCard("outro"));
+	step(5000, () => {});
+}
+const DURATION = () => at;
+
+function setCaption(text) { const c = $("caption"); c.textContent = text; }
+function flashBtn(sel) { const b = document.querySelector(sel); if (!b) return; b.classList.add("flash"); setTimeout(() => b.classList.remove("flash"), 150); flashes.push({ el: b, until: sim.now + 150 }); }
+const flashes = [];
+// Pointer glides toward the aimed element over 600 ms.
+const ptr = { x: 960, y: 1200, fromX: 960, fromY: 1200, toX: 960, toY: 1200, at: 0 };
+function aim(sel) {
+	const el = document.querySelector(sel); if (!el) return;
+	const b = el.getBoundingClientRect();
+	Object.assign(ptr, { fromX: ptr.x, fromY: ptr.y, toX: b.left + b.width * 0.55, toY: b.top + b.height * 0.6, at: sim.now });
+}
+function movePointer() {
+	const k = Math.min(1, (sim.now - ptr.at) / 600), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+	ptr.x = ptr.fromX + (ptr.toX - ptr.fromX) * e; ptr.y = ptr.fromY + (ptr.toY - ptr.fromY) * e;
+	const p = $("pointer"); p.style.left = `${ptr.x}px`; p.style.top = `${ptr.y}px`;
+	for (const f of flashes) f.el.classList.toggle("flash", sim.now < f.until);
+	const f = Math.min(1, (sim.now - card.at) / 450);
+	$("card").style.opacity = card.shown ? (card.at === 0 ? 1 : f) : 1 - f;
+}
+const card = { shown: false, at: -1e9 };
+function showCard(kind) {
+	const c = $("card");
+	Object.assign(card, { shown: true, at: sim.now });
+	c.innerHTML = kind === "intro"
+		? `<img src="icon.svg" alt=""><h2>GitHub Tracker</h2><p>A Stream Deck plugin for new commits and releases</p><div class="note">Simulated demo · keys drawn by the plugin's real renderer</div>`
+		: `<img src="icon.svg" alt=""><h2>GitHub Tracker</h2><ul><li>Commits and releases tracked separately</li><li>One alert key for every repo you follow</li><li>Hold to mark seen · Stream Deck + and Neo supported</li><li>Public repos work without a token</li></ul>`;
+}
+function hideCard() { Object.assign(card, { shown: false, at: sim.now }); }
+
+let cursor = 0;
+function runTour(t) {
+	while (cursor < tour.length && tour[cursor].t <= t) { advance(tour[cursor].t); tour[cursor++].fn(); }
+	advance(t);
+}
+
+if (VIDEO || params.has("autoplay")) {
+	buildTour();
+	sim.nextPoll = Infinity; // the tour triggers checks explicitly so its timing is predictable
+}
+if (VIDEO) {
+	// Deterministic frame stepping for capture: window.__frame(ms) renders the state at that time.
+	window.__duration = DURATION();
+	window.__frame = (t) => { runTour(t); render(); movePointer(); };
+	window.__frame(0);
+} else {
+	const start = performance.now();
+	const tick = () => {
+		const t = performance.now() - start;
+		if (tour.length) { runTour(t); if (cursor >= tour.length) { tour.length = 0; } } else advance(t);
+		if (!tour.length && sim.nextPoll === Infinity) sim.nextPoll = sim.now + POLL_MS;
+		render();
+		requestAnimationFrame(tick);
+	};
+	requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>

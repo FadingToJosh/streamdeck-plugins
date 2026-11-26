@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in the plugin isn't working.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for reporting. **Never paste your GitHub token** into an issue or a log."
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what you saw instead. A photo of the key helps.
+    validations:
+      required: true
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Which plugin?
+      options: [GitHub Tracker]
+    validations:
+      required: true
+  - type: dropdown
+    id: action
+    attributes:
+      label: Which action? (GitHub Tracker)
+      options: [Repo Tracker, Update Alert, Settings panel, Not sure]
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      multiple: true
+      options: [Stream Deck (keys), Stream Deck +, Stream Deck Neo, Stream Deck Mobile, Other]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Plugin version, Stream Deck app version, and OS (for example 0.1.0, Stream Deck 7.6, Windows 11).
+    validations:
+      required: true
+  - type: dropdown
+    id: token
+    attributes:
+      label: Are you using a GitHub token? (GitHub Tracker)
+      options: [No, "Yes, fine-grained", "Yes, classic"]
+  - type: input
+    id: repo
+    attributes:
+      label: Repo you're tracking (if public)
+      placeholder: owner/repo
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional)
+      description: "Plugin logs are in the plugin's .sdPlugin/logs folder inside Stream Deck's Plugins folder. Check them for anything private before pasting."
+      render: text

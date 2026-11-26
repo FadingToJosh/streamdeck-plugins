@@ -1,0 +1,17 @@
+name: Feature request or question
+description: Suggest an improvement or ask how something works.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Which plugin?
+      options: [GitHub Tracker, Something new]
+    validations:
+      required: true
+  - type: textarea
+    id: ask
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
