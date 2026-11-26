@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fishing Pro demo</title>
+<meta name="description" content="Play Fishing Pro for Stream Deck in your browser, with its OBS overlay and simulated chat viewers.">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="../../demo-kit/demo.css">
+<style>
+:root { --accent: #38bdf8; }
+.stage { grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); }
+@media (max-width: 980px) { .stage { grid-template-columns: 1fr; } }
+.screen { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
+	background: radial-gradient(120% 90% at 70% 20%, #3a4d6b 0%, #1d2638 45%, #0e131d 100%); }
+.screen::before { content: "your game or camera"; position: absolute; inset: 0; display: grid; place-items: center; color: #ffffff22; font-size: clamp(14px, 2.4vw, 26px); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.screen iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; background: transparent; }
+.chatbox { display: grid; gap: 12px; }
+.chatlog { font-size: 13.5px; background: #0f131b; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 132px; overflow: hidden; margin: 0; list-style: none; }
+.chatlog li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.chatlog b { color: var(--fg); }
+.chatlog .cmd { color: var(--accent); font-family: var(--mono); }
+.timing { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.timing input { width: 100%; }
+.status { font-size: 13px; color: var(--muted); }
+.status b { color: var(--ok); }
+.extras { grid-template-columns: minmax(0, 1fr); max-width: 300px; }
+.headstart { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<header class="top">
+		<img src="icon.png" alt="">
+		<h1>Fishing Pro <span>for Stream Deck</span></h1>
+		<span class="pill">Simulation</span>
+		<nav>
+			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/fishing-pro">Help &amp; support</a>
+			<a href="../../fishing/demo/">Free Fishing demo</a>
+		</nav>
+	</header>
+
+	<div class="intro">
+		<h2>Fish on your deck. Let chat reel them in.</h2>
+		<p>28 fish, a rare variant of each, four rods to unlock, and an OBS overlay that shows every catch on stream. The keys and the overlay below run Fishing Pro's own code. Only the deck, the stream and the chat are pretend.</p>
+	</div>
+
+	<div class="stage">
+		<div class="col">
+			<div class="panel">
+				<div class="row"><h3>Your stream, with the overlay</h3><span class="status">OBS browser source, 1920 × 1080</span></div>
+				<div class="screen" id="screen"></div>
+			</div>
+			<div class="panel chatbox">
+				<div class="row" style="margin:0"><h3>Chat (simulated)</h3><span class="status" id="chatStatus">off</span></div>
+				<label class="check"><input type="checkbox" id="chatOn"> Let chat fish</label>
+				<div class="actions">
+					<button class="btn" id="sayCast" disabled><span class="dot"></span>A viewer types <code id="castCmd">!cast</code></button>
+					<button class="btn" id="sayReel" disabled><span class="dot"></span>A viewer types <code id="reelCmd">!reel</code></button>
+				</div>
+				<ul class="chatlog" id="chatlog"></ul>
+				<div class="timing">
+					<label class="field">Stream delay: <span id="delayV">5 s</span><input type="range" id="delay" min="0" max="20" step="1" value="5"></label>
+					<label class="field">Reel window: <span id="windowV">5 s</span><input type="range" id="window" min="2" max="10" step="1" value="5"></label>
+				</div>
+				<p class="sub" style="margin:0">While chat is on, BITE! lasts for the reel window, then the fish stays on the line for the stream delay so viewers get their full window. Your own presses do nothing in that second part.</p>
+			</div>
+		</div>
+
+		<div class="panel deck-first">
+			<div class="row"><h3>Your Stream Deck</h3><select id="lang" aria-label="Language"></select></div>
+			<div class="deck"><div class="grid" id="grid" style="--cols:5"></div></div>
+			<div class="legend"><span><b>Click</b> = press</span><span><b>Hold</b> a fishing key = tackle box</span><span>Stats key: tap to flip</span></div>
+			<div class="extras">
+				<div><div id="infobar"></div><div class="extralabel">Stream Deck Neo infobar: Fishing Status</div></div>
+			</div>
+			<div class="toast" id="toast">Press <b>CAST</b> on the rod, then reel when the water says <b>BITE!</b></div>
+			<div class="headstart"><span class="sub" style="margin:0">Rods unlock every 7 species.</span><button class="btn" id="headstart">Start with 6 species</button><button class="btn" id="reset">Reset progress</button></div>
+		</div>
+	</div>
+
+	<section class="more">
+		<div>
+			<h4>What's simulated</h4>
+			<p>The game, the keys, the infobar and the overlay page are Fishing Pro's real code. The overlay server is real too, just reached without a network. Chat is faked: nothing connects to any streaming site, and the viewers are made up. Progress is saved in this browser.</p>
+		</div>
+		<div>
+			<h4>The keys here</h4>
+			<ul>
+				<li><b>Fishing Spot</b> and <b>Fishing Rod</b>: two-key play.</li>
+				<li><b>Fishing</b>: the whole game on one key.</li>
+				<li><b>Fishing Stats</b>: collection, rod progress, totals.</li>
+				<li><b>Leaderboard</b>: puts the top chat anglers on stream.</li>
+			</ul>
+		</div>
+		<div>
+			<h4>Get it</h4>
+			<p>Fishing Pro is on the Elgato Marketplace for Stream Deck 7.6 or later on Windows. Chat works with Twitch directly, and with YouTube and Kick through Streamer.bot. See <a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/fishing-pro">setup and privacy</a>.</p>
+		</div>
+	</section>
+
+	<footer>Fishing Pro is an independent project by FadingToJosh. It is not affiliated with or endorsed by Elgato, OBS, Twitch, YouTube, Kick or Streamer.bot. Stream Deck is a trademark of Corsair Memory, Inc. All other names are trademarks of their owners.</footer>
+</div>
+
+<script type="module">
+import {
+	host, overlayRequest, overlayUrl, viewerSays, configureTwitch, configureTiming, timingSettings, onChatStatus, chatLive,
+	configureLanguage, commands, LANGS, LANG_NAMES, globals, COLLECTIBLE, onAnyGame,
+} from "./plugin.js";
+import { placeKey, placeInfobar, makeToast, esc } from "../../demo-kit/deck.js";
+
+const $ = (id) => document.getElementById(id);
+const toast = makeToast($("toast"));
+const P = "com.fadingtojosh.fishingpro.";
+const INFOBAR_LAYOUT = {"items":[{"key":"icon","type":"pixmap","rect":[6,5,40,40]},{"key":"title","type":"text","rect":[54,4,172,24],"alignment":"left","font":{"size":15,"weight":700},"color":"#ffffff"},{"key":"sub","type":"text","rect":[54,29,172,17],"alignment":"left","font":{"size":11,"weight":400},"color":"#bae6fd"}]};
+const STORE = "sd-demo:fishing-pro";
+host.storageKey = "fishing-pro";
+
+// ---- deck --------------------------------------------------------------------------------------
+const KEYS = [null, null, null, null, null, "spot", "rod", null, "solo", null, null, "stats", null, "board", null];
+const NAMES = { spot: "Fishing Spot", rod: "Fishing Rod", solo: "Fishing", stats: "Fishing Stats", board: "Leaderboard" };
+setTimeout(() => {
+	for (const kind of KEYS) {
+		const cell = document.createElement("div");
+		$("grid").appendChild(cell);
+		if (!kind) { cell.className = "key blank"; continue; }
+		const fishing = kind === "spot" || kind === "rod" || kind === "solo";
+		placeKey(host, cell, P + kind, {
+			holdMs: fishing ? 600 : 0, alt: NAMES[kind],
+			onPress: kind === "board" ? () => toast("Leaderboard toggled on stream. It lists chat's top anglers, so it's empty until a viewer lands a fish.") : undefined,
+		});
+	}
+	placeInfobar(host, $("infobar"), P + "infobar", { "layouts/infobar.json": INFOBAR_LAYOUT });
+	startOverlay();
+	initControls();
+}, 0); // after the plugin has loaded its saved settings and started, as on a real deck
+
+// ---- overlay: the plugin's own page, fed by its own server ---------------------------------------
+function startOverlay() {
+	const token = overlayUrl().split("/").pop();
+	const page = overlayRequest(`/overlay/${token}`).body;
+	// The page normally opens EventSource('/events/<token>') on 127.0.0.1. Here the same request
+	// goes to the same server code through the demo's stand-in socket.
+	window.__overlayEvents = (deliver) => overlayRequest(`/events/${token}`, (chunk) => {
+		for (const m of chunk.matchAll(/^data: (.*)$/gm)) deliver(m[1]);
+	});
+	const bridge = `<script>window.EventSource=function(){var es=this;parent.__overlayEvents(function(d){es.onmessage&&es.onmessage({data:d});});};<\/script>`;
+	const frame = document.createElement("iframe");
+	frame.title = "Fishing Pro OBS overlay";
+	frame.srcdoc = page.replace("<head>", "<head>" + bridge);
+	$("screen").appendChild(frame);
+	const fit = () => { frame.style.transform = `scale(${$("screen").clientWidth / 1920})`; };
+	new ResizeObserver(fit).observe($("screen"));
+	fit();
+}
+
+// ---- chat ----------------------------------------------------------------------------------------
+const VIEWERS = ["ReelDeal", "BaitAndSwitch", "CastAway42", "LureLord", "Finnegan", "TackleTess", "NorthernPike_", "minnow_mo"];
+const chatlog = [];
+function chatLine(user, text) {
+	chatlog.unshift(`<li><b>${esc(user)}</b>: <span class="cmd">${esc(text)}</span></li>`);
+	chatlog.length = Math.min(chatlog.length, 6);
+	$("chatlog").innerHTML = chatlog.join("");
+}
+function say(which) {
+	const user = VIEWERS[Math.floor(Math.random() * VIEWERS.length)];
+	const text = commands()[which];
+	chatLine(user, text);
+	viewerSays(user, text);
+}
+function refreshChat() {
+	const live = chatLive();
+	$("chatStatus").innerHTML = live ? "<b>connected</b> to a pretend channel" : $("chatOn").checked ? "connecting…" : "off";
+	$("sayCast").disabled = $("sayReel").disabled = !live;
+	$("castCmd").textContent = commands().cast;
+	$("reelCmd").textContent = commands().reel;
+}
+onChatStatus(refreshChat);
+$("chatOn").addEventListener("change", (e) => {
+	configureTwitch({ enabled: e.target.checked, channel: "demo_stream" });
+	if (e.target.checked) toast("Chat is on. Cast, and when it bites, have a viewer type the reel command. The overlay credits them.");
+});
+$("sayCast").addEventListener("click", () => say("cast"));
+$("sayReel").addEventListener("click", () => say("reel"));
+for (const [id, key] of [["delay", "delaySec"], ["window", "windowSec"]]) {
+	$(id).addEventListener("input", (e) => {
+		configureTiming({ [key]: Number(e.target.value) });
+		$(id + "V").textContent = `${timingSettings()[key]} s`;
+	});
+}
+onAnyGame((g) => {
+	if (g.phase === "caught" && g.last?.by) toast(`${g.last.by} reeled it in. Check the overlay and the Leaderboard key.`);
+	if (g.phase === "unlock" && g.unlocked) toast(`New rod: ${g.unlocked.name}. Better odds of rare fish and variants from now on.`);
+});
+
+// ---- language and progress -------------------------------------------------------------------------
+function initControls() {
+$("lang").innerHTML = LANGS.map((l) => `<option value="${l}">${LANG_NAMES[l]}</option>`).join("");
+$("lang").value = globals().language?.lang && globals().language.lang !== "auto" ? globals().language.lang : "en";
+$("lang").addEventListener("change", (e) => { configureLanguage({ lang: e.target.value }); refreshChat(); });
+
+$("reset").addEventListener("click", () => { host.resetSaved(); location.reload(); });
+$("headstart").addEventListener("click", () => {
+	// Saved stats with the six commonest fish already caught, so the next new species unlocks a rod.
+	let saved = {};
+	try { saved = JSON.parse(localStorage.getItem(STORE) ?? "{}"); } catch {}
+	const best = {};
+	for (const f of COLLECTIBLE.filter((f) => f.tier === "common").slice(0, 6)) best[f.name] = Math.round((f.min + f.max) * 5) / 10;
+	saved.stats = { total: 6, variants: 0, junk: 0, best, bestVariant: {} };
+	try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch {}
+	location.reload();
+});
+
+const t = timingSettings();
+$("delay").value = t.delaySec; $("delayV").textContent = `${t.delaySec} s`;
+$("window").value = t.windowSec; $("windowV").textContent = `${t.windowSec} s`;
+$("chatOn").checked = !!globals().twitch?.enabled;
+refreshChat();
+}
+</script>
+</body>
+</html>

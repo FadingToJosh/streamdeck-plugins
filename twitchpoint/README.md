@@ -2,6 +2,8 @@
 
 Six keys that show what your [Twitchpoint](https://github.com/FadingToJosh/twitchpoint) instance is doing: the channel it's watching, drop progress, the next drop, the campaign ETA, and the next game in your queue.
 
+**Try it in your browser:** [interactive demo](https://fadingtojosh.github.io/streamdeck-plugins/twitchpoint/demo/) (a simulation that runs the plugin's real keys against a pretend Twitchpoint server).
+
 The keys refresh every 60 seconds while a drop is being farmed and every 5 minutes otherwise (both configurable). Press any key to refresh straight away.
 
 Twitchpoint itself is a separate program, based on [miwidot/twitchpoint](https://github.com/miwidot/twitchpoint). This plugin only displays what it reports. It doesn't log in to Twitch or do any farming itself.

@@ -4,6 +4,8 @@
 
 Puts the game you're playing on a Stream Deck key. Launch a game and the key shows its icon and name within seconds; switch games and it follows; quit and it goes back to idle.
 
+**Try it in your browser:** [interactive demo](https://fadingtojosh.github.io/streamdeck-plugins/actively-playing/demo/) (a simulation that runs the plugin's real game detection against a pretend PC).
+
 ## Where it works
 
 - **Keys** on any Stream Deck: the game's icon, with its name as the title.

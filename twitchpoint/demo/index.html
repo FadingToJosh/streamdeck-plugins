@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twitchpoint keys demo</title>
+<meta name="description" content="See what the Twitchpoint Stream Deck keys show, driven by a pretend Twitchpoint server.">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="../../demo-kit/demo.css">
+<style>
+:root { --accent: #f5b942; }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg .btn.on { border-color: var(--accent); color: var(--accent); }
+.block { margin-bottom: 16px; }
+.block > .lbl { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.drops { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.drops li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 14px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.drops li .bar { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.drops li .bar i { display: block; height: 100%; background: var(--accent); }
+.drops li.done { opacity: .55; }
+.drops li .m { color: var(--muted); font-family: var(--mono); font-size: 12.5px; }
+.meta { font-size: 13px; color: var(--muted); }
+.meta b { color: var(--fg); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+	<header class="top">
+		<img src="icon.png" alt="">
+		<h1>Twitchpoint <span>keys for Stream Deck</span></h1>
+		<span class="pill">Simulation</span>
+		<nav>
+			<a href="https://github.com/FadingToJosh/streamdeck-plugins/tree/main/twitchpoint">Help &amp; support</a>
+		</nav>
+	</header>
+
+	<div class="intro">
+		<h2>Your drop progress, at a glance.</h2>
+		<p>Six keys that show what your Twitchpoint server reports: the channel it's watching, the drop it's working on, what comes next and when the campaign will be done. Here the server is pretend; change what it reports on the left and watch the keys on their next refresh.</p>
+	</div>
+
+	<div class="stage">
+		<div class="panel">
+			<h3>Your Twitchpoint server (simulated)</h3>
+			<p class="sub">Made-up channel, game and drops. Nothing here connects to anything.</p>
+			<div class="block">
+				<div class="lbl">Server</div>
+				<div class="seg" id="server">
+					<button class="btn on" data-v="up">Running</button>
+					<button class="btn" data-v="old">Older build</button>
+					<button class="btn" data-v="down">Stopped</button>
+				</div>
+			</div>
+			<div class="block">
+				<div class="lbl">Campaign</div>
+				<div class="meta" id="campaign"></div>
+				<ul class="drops" id="drops"></ul>
+				<div class="actions" style="margin-top:10px">
+					<button class="btn" id="ff"><span class="dot"></span>Watch 15 more minutes</button>
+					<button class="btn" id="ending">Campaign ends in 1 hour</button>
+					<button class="btn" id="restart">Start over</button>
+				</div>
+			</div>
+			<div class="block">
+				<div class="lbl">Channel</div>
+				<div class="seg" id="live">
+					<button class="btn on" data-v="1">Streamer is live</button>
+					<button class="btn" data-v="0">Nobody live</button>
+				</div>
+			</div>
+			<div class="block" style="margin:0">
+				<div class="lbl">Next game with a campaign</div>
+				<div class="seg" id="next">
+					<button class="btn on" data-v="queue">Turbo Lapse, someone live</button>
+					<button class="btn" data-v="offline">Kingsworn, nobody live</button>
+					<button class="btn" data-v="none">None</button>
+				</div>
+			</div>
+			<ul class="log" id="log"></ul>
+		</div>
+
+		<div class="panel">
+			<div class="row"><h3>Your Stream Deck</h3><select id="lang" aria-label="Language"></select></div>
+			<div class="deck"><div class="grid" id="grid" style="--cols:3"></div></div>
+			<div class="legend"><span><b>Click</b> any key = refresh now</span><span id="refresh">Refreshes every 15 s here (the plugin's fastest setting; default 60 s)</span></div>
+			<div class="toast" id="toast">Press any key to refresh straight away.</div>
+		</div>
+	</div>
+
+	<section class="more">
+		<div>
+			<h4>What's simulated</h4>
+			<p>The keys are drawn and refreshed by the plugin's own code. The server it asks is a stand-in on this page that answers the same requests a real Twitchpoint server would, including the older endpoints and connection errors.</p>
+		</div>
+		<div>
+			<h4>What the plugin does</h4>
+			<p>It only reads what your Twitchpoint server reports over your local network. It doesn't log in to anything or watch anything itself. Set the server's address once in any key's settings.</p>
+		</div>
+		<div>
+			<h4>Older server builds</h4>
+			<p>Builds without <code>/api/streamdeck</code> still work through the older endpoints, but <b>Next drop</b> shows <code>n/a</code> and the ETA covers only the current drop. Try <b>Older build</b> on the left.</p>
+		</div>
+	</section>
+
+	<footer>The Twitchpoint keys are an independent project. They are not affiliated with or endorsed by Twitch or Elgato. Stream Deck is a trademark of Corsair Memory, Inc. Channel, game and drop names shown are fictional.</footer>
+</div>
+
+<script type="module">
+import { host, setLanguage, RUNTIME } from "./plugin.js";
+import { placeKey, makeLog, makeToast, esc } from "../../demo-kit/deck.js";
+
+const $ = (id) => document.getElementById(id);
+const log = makeLog($("log"));
+const toast = makeToast($("toast"));
+const BASE = "http://127.0.0.1:8080";
+
+// ---- the pretend server ----------------------------------------------------------------------------
+const DROPS = [
+	{ id: "d1", name: "Nebula Banner", required: 30 },
+	{ id: "d2", name: "Comet Trail", required: 60 },
+	{ id: "d3", name: "Orbit Emote", required: 120 },
+	{ id: "d4", name: "Ringed Helmet", required: 180 },
+	{ id: "d5", name: "Starhaven Glider", required: 240 },
+];
+const NEXT = {
+	queue: { game: "Turbo Lapse", campaign: "Turbo Lapse Launch Week", source: "queue", rank: 2 },
+	offline: { game: "Kingsworn", campaign: "Kingsworn Crowns", source: "offline", rank: 3 },
+};
+const fresh = () => ({ server: "up", watched: 41, endsIn: 72 * 60, live: true, next: "queue" });
+let sim = fresh();
+let requests = 0;
+
+function summary() {
+	const current = DROPS.find((d) => d.required > sim.watched);
+	const claimed = DROPS.filter((d) => d.required <= sim.watched).length;
+	const left = DROPS[DROPS.length - 1].required - sim.watched;
+	const watching = sim.live ? { login: "pixelpaladin", display_name: "PixelPaladin", game: "Starhaven", is_drop_target: true } : null;
+	const drop = sim.live && current ? {
+		campaign: "Starhaven Season 3", game: "Starhaven", channel: "pixelpaladin", name: current.name,
+		progress: sim.watched, required: current.required, percent: Math.round((sim.watched / current.required) * 100),
+		position: claimed + 1, total: DROPS.length, claimed,
+		next: (() => { const n = DROPS[claimed + 1]; return n ? { id: n.id, name: n.name, progress: sim.watched, required: n.required, finish_in_minutes: n.required - sim.watched } : null; })(),
+		campaign_remaining_minutes: left, campaign_ends_at: new Date(Date.now() + sim.endsIn * 60000).toISOString(),
+		finishes_after_campaign_end: left > sim.endsIn, unreachable: 0, estimated: true,
+	} : null;
+	return { version: "demo", generated_at: new Date().toISOString(), watching, also_watching: [], drop, next_game: sim.next === "none" ? null : NEXT[sim.next] };
+}
+function legacy(path) {
+	const s = summary();
+	if (path === "/api/drops") {
+		const rows = [];
+		if (s.drop) rows.push({ campaign_name: s.drop.campaign, game_name: s.drop.game, drop_name: s.drop.name, channel_login: s.drop.channel, progress: s.drop.progress, required: s.drop.required, percent: s.drop.percent, end_at: s.drop.campaign_ends_at, status: "ACTIVE", eta_minutes: s.drop.required - s.drop.progress, claimed_drops: s.drop.claimed, watchable_drops: s.drop.total });
+		if (s.next_game) rows.push({ campaign_name: s.next_game.campaign, game_name: s.next_game.game, drop_name: "Launch Badge", channel_login: "", progress: 0, required: 60, percent: 0, end_at: new Date(Date.now() + 5 * 864e5).toISOString(), status: s.next_game.source === "queue" ? "QUEUED" : "IDLE", eta_minutes: 60 });
+		return rows;
+	}
+	if (path === "/api/channels") return s.watching ? [{ login: s.watching.login, display_name: s.watching.display_name, is_watching: true, game_name: s.watching.game }] : [];
+	if (path === "/api/wanted_games") return { games: ["Starhaven", "Turbo Lapse", "Kingsworn"] };
+	return null;
+}
+const realFetch = window.fetch.bind(window);
+window.fetch = async (url, opts) => {
+	if (!String(url).startsWith(BASE)) return realFetch(url, opts);
+	const path = new URL(url).pathname;
+	requests++;
+	if (sim.server === "down") {
+		log(`<span class="s">GET ${esc(path)}</span>: connection refused`);
+		throw new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } });
+	}
+	let body = null;
+	if (path === "/api/streamdeck") body = sim.server === "up" ? summary() : null;
+	else body = legacy(path);
+	log(`<span class="a">GET ${esc(path)}</span> ${body ? "200" : "404"}`);
+	return body ? new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json" } }) : new Response("not found", { status: 404 });
+};
+
+// ---- the panel ----------------------------------------------------------------------------------------
+function draw() {
+	const s = summary();
+	$("campaign").innerHTML = `<b>Starhaven Season 3</b> on Starhaven · ends in ${Math.floor(sim.endsIn / 60)}h ${sim.endsIn % 60}m · watched <b>${sim.watched} min</b>`;
+	$("drops").innerHTML = DROPS.map((d) => {
+		const p = Math.min(1, sim.watched / d.required);
+		return `<li class="${p >= 1 ? "done" : ""}"><span>${esc(d.name)}${p >= 1 ? " ✓" : ""}</span><span class="m">${Math.min(sim.watched, d.required)}/${d.required}m</span><span class="bar"><i style="width:${p * 100}%"></i></span></li>`;
+	}).join("");
+	for (const [id, v] of [["server", sim.server], ["live", sim.live ? "1" : "0"], ["next", sim.next]])
+		$(id).querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+}
+const changed = (msg) => { draw(); toast(`${msg} The keys pick it up on their next refresh. Press one to refresh now.`); };
+$("server").addEventListener("click", (e) => {
+	const v = e.target.closest("button")?.dataset.v; if (!v) return;
+	sim.server = v;
+	changed(v === "down" ? "Server stopped. The keys keep showing the last data until three refreshes in a row fail, then show Offline." : v === "old" ? "Older server build: /api/streamdeck is gone, so the plugin falls back to the old endpoints." : "Server running.");
+});
+$("live").addEventListener("click", (e) => { const v = e.target.closest("button")?.dataset.v; if (!v) return; sim.live = v === "1"; changed(sim.live ? "The streamer is live again." : "Nobody is live, so nothing is being watched."); });
+$("next").addEventListener("click", (e) => { const v = e.target.closest("button")?.dataset.v; if (!v) return; sim.next = v; changed("Next game changed."); });
+$("ff").addEventListener("click", () => { sim.watched = Math.min(DROPS[DROPS.length - 1].required, sim.watched + 15); sim.endsIn = Math.max(0, sim.endsIn - 15); changed("15 more minutes watched."); });
+$("ending").addEventListener("click", () => { sim.endsIn = 60; changed("The campaign now ends before every drop can be earned, so Campaign ETA warns you."); });
+$("restart").addEventListener("click", () => { sim = fresh(); changed("Back to the start."); });
+draw();
+
+// ---- the deck -------------------------------------------------------------------------------------------
+const P = "com.twitchpoint.streamdeck.";
+const KEYS = [["watching", "Watching"], ["drop-progress", "Drop Progress"], ["drop-position", "Drop Position"], ["next-drop", "Next Drop"], ["campaign-eta", "Campaign ETA"], ["next-game", "Next Game"]];
+const placed = [];
+const NAMES = { en: "English", de: "Deutsch", fr: "Français", es: "Español", ja: "日本語", ko: "한국어", zh_CN: "简体中文", zh_TW: "繁體中文" };
+$("lang").innerHTML = ["en", ...Object.keys(RUNTIME)].map((l) => `<option value="${l}">${NAMES[l] ?? l}</option>`).join("");
+$("lang").addEventListener("change", (e) => { setLanguage(e.target.value); placed[0]?.keyDown(); });
+
+// Same settings a user would save: the local server, and the fastest refresh the plugin allows.
+host.storageKey = "twitchpoint";
+host.setGlobalSettings({ baseUrl: BASE, intervalSec: 15, idleIntervalSec: 60 });
+for (const [id, name] of KEYS) {
+	const cell = document.createElement("div");
+	$("grid").appendChild(cell);
+	placed.push(placeKey(host, cell, P + id, { alt: name }));
+}
+</script>
+</body>
+</html>
