@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Repo Watch demo</title>
-<meta name="description" content="Interactive simulation of the Repo Watch Stream Deck plugin: push commits and releases to sandbox repos and watch the keys react.">
+<meta name="description" content="Interactive simulation of the Repo Watch Stream Deck plugin: push commits, open issues and PRs, break CI and star sandbox repos, and watch the keys react.">
 <link rel="icon" href="icon.svg">
 <style>
 :root {
 	--bg: #0b0e14; --panel: #141923; --panel-2: #1a2030; --line: #2a3140;
-	--fg: #eef1f6; --muted: #8b94a7; --commit: #34d1bf; --release: #ffb938; --signal: #ff7a45; --ok: #7ee081;
+	--fg: #eef1f6; --muted: #8b94a7; --commit: #34d1bf; --release: #ffb938; --signal: #ff7a45; --ok: #7ee081; --issue: #c3a6ff; --pull: #5fb7ff; --error: #ff6b6b; --star: #ffd84d;
 	--radius: 16px; --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
@@ -47,13 +47,17 @@ header.top nav a:hover { color: var(--fg); }
 .btn .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
 .btn.commit .dot { background: var(--commit); }
 .btn.release .dot { background: var(--release); }
+.btn.issue .dot { background: var(--issue); }
+.btn.pull .dot { background: var(--pull); }
+.btn.ci .dot { background: var(--error); }
+.btn.star .dot { background: var(--star); }
 
 .poll { display: flex; align-items: center; gap: 12px; margin: 16px 0 12px; font-size: 14px; color: var(--muted); }
 .bar { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .bar i { display: block; height: 100%; width: 0; background: var(--muted); }
 .log { font-family: var(--mono); font-size: 12.5px; color: var(--muted); background: #0f131b; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 150px; overflow: hidden; margin: 0; list-style: none; }
 .log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.log .c { color: var(--commit); } .log .r { color: var(--release); } .log .s { color: var(--signal); } .log .k { color: var(--fg); }
+.log .c { color: var(--commit); } .log .r { color: var(--release); } .log .i { color: var(--issue); } .log .p { color: var(--pull); } .log .x { color: var(--error); } .log .st { color: var(--star); } .log .s { color: var(--signal); } .log .k { color: var(--fg); }
 
 .deck { background: linear-gradient(180deg, #232a38, #161b25); border: 1px solid #333c4f; border-radius: 26px; padding: 22px; box-shadow: 0 30px 60px -30px #000, inset 0 1px 0 #ffffff14; }
 .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
@@ -122,7 +126,7 @@ body.video * { transition: none !important; }
 
 	<div class="intro">
 		<h2>Know when a repo changed since you last looked.</h2>
-		<p>Push commits or publish a release in the sandbox on the left. On the next check, the keys on the right light up. Press and hold them the way you would on a real Stream Deck.</p>
+		<p>Push commits, publish a release, open an issue or a PR, break CI or add stars in the sandbox on the left. On the next check, the keys on the right light up. Press and hold them the way you would on a real Stream Deck.</p>
 	</div>
 
 	<div class="stage">
@@ -137,7 +141,7 @@ body.video * { transition: none !important; }
 		<div class="panel">
 			<div class="row"><h3>Your Stream Deck</h3><select id="lang" aria-label="Key language"></select></div>
 			<div class="deck"><div class="grid" id="grid"></div></div>
-			<div class="legend"><span><b>Click</b> = press</span><span><b>Hold ½ s</b> = mark as seen</span><span>Checks are sped up here · the plugin checks hourly by default</span></div>
+			<div class="legend"><span><b>Click</b> = press</span><span><b>Hold ½ s</b> = mark as seen</span><span>Checks are sped up here · the plugin checks every 15 minutes by default</span></div>
 			<div class="strips">
 				<div><div class="strip"><img id="strip0" alt="Touch strip, Repo Tracker"></div><div class="striplabel">Stream Deck + dial: Repo Tracker</div></div>
 				<div><div class="strip"><img id="strip1" alt="Touch strip, Update Alert"></div><div class="striplabel">Stream Deck + dial: Update Alert</div></div>
@@ -150,7 +154,7 @@ body.video * { transition: none !important; }
 	<section class="more">
 		<div>
 			<h4>What's simulated</h4>
-			<p>The keys are drawn by the plugin's own rendering code, so they look exactly like the real thing. The repos, the polling, and the browser links are faked. On a real deck, pressing a key with changes opens the compare view or releases page in your browser.</p>
+			<p>The keys are drawn by the plugin's own rendering code, so they look exactly like the real thing. The repos, the polling, and the browser links are faked. On a real deck, pressing a key with changes opens the failed run, the new PR or issue, the compare view or the releases page in your browser.</p>
 		</div>
 		<div id="real">
 			<h4>Try it for real</h4>
@@ -162,7 +166,7 @@ body.video * { transition: none !important; }
 		</div>
 		<div>
 			<h4>How it counts</h4>
-			<p>When you add a repo, everything already there counts as seen. Commits on the default branch and releases are counted separately. Holding a key records the current state as seen.</p>
+			<p>When you add a repo, everything already there counts as seen. Failed CI, review requests, new PRs, new issues, releases and commits each get their own badge, most urgent first. Stars show when nothing else is new, and milestones get a celebration. Holding a key records the current state as seen.</p>
 		</div>
 	</section>
 
@@ -186,21 +190,40 @@ if (VIDEO) document.body.classList.add("video");
 const stepIndex = (i, n) => (n <= 0 ? null : i === null ? 0 : i + 1 >= n ? null : i + 1);
 const indexAfterClear = (i, remaining) => (remaining <= 0 ? null : i < remaining ? i : null);
 
-function makeRepo(name, commits, releases, tag) {
-	return { name, remoteC: commits, remoteR: releases, polledC: commits, polledR: releases, seenC: commits, seenR: releases, tag, totalsUntil: 0 };
+function makeRepo(name, commits, releases, tag, stars, issueNo) {
+	return {
+		name, tag, totalsUntil: 0,
+		remoteC: commits, remoteR: releases, polledC: commits, polledR: releases, seenC: commits, seenR: releases,
+		remoteI: 0, polledI: 0, seenI: 0, remoteP: 0, polledP: 0, seenP: 0, number: issueNo,
+		remoteCi: 0, polledCi: 0, seenCi: 0, runId: 1,
+		remoteS: stars, polledS: stars, seenS: stars, milestone: milestoneFor(stars), celebrate: undefined, flashUntil: 0, flash: 0,
+	};
 }
+// Same series as the plugin: 10, 25, 50, 100, 250, 500, 1k…
+function milestoneFor(n) { let best = 0; for (let b = 10; b <= n; b *= 10) for (const m of [b, b * 2.5, b * 5]) if (m <= n) best = m; return best; }
 const sim = {
 	now: 0,
-	repos: [makeRepo("you/demo-app", 148, 6, [1, 4, 0]), makeRepo("team/api-server", 2310, 41, [3, 12, 2])],
+	repos: [makeRepo("you/demo-app", 148, 6, [1, 4, 0], 97, 41), makeRepo("team/api-server", 2310, 41, [3, 12, 2], 1240, 880)],
 	nextPoll: POLL_MS,
 	alert: { index: null, until: 0 },
 	pressing: {},
 	log: [],
 	toast: null,
 };
-const summary = (r) => ({ key: r.name, name: r.name, watch: "both", unseenCommits: r.polledC - r.seenC, commitsExact: true, unseenReleases: r.polledR - r.seenR, totalCommits: r.polledC, totalReleases: r.polledR, intro: false, pending: false });
-const hasNew = (r) => r.polledC > r.seenC || r.polledR > r.seenR;
+const TRACK = { commits: true, releases: true, issues: true, pulls: true, ci: true, reviews: true, stars: true };
+const summary = (r) => ({
+	key: r.name, name: r.name, watch: "both", track: TRACK,
+	unseenCommits: r.polledC - r.seenC, commitsExact: true, unseenReleases: r.polledR - r.seenR,
+	unseenIssues: r.polledI - r.seenI, issuesExact: true, unseenPulls: r.polledP - r.seenP, pullsExact: true,
+	unseenCi: r.polledCi && r.polledCi !== r.seenCi ? 1 : 0, unseenReviews: 0,
+	celebrate: r.celebrate, stars: r.polledS, starGain: r.polledS > r.seenS ? r.polledS - r.seenS : undefined,
+	starFlash: sim.now < r.flashUntil ? r.flash : undefined,
+	openIssues: 12 + r.polledI, openPulls: 3 + r.polledP, forks: 14, watchers: 6,
+	totalCommits: r.polledC, totalReleases: r.polledR, intro: false, pending: false,
+});
+const hasNew = (r) => { const s = summary(r); return s.unseenCommits > 0 || s.unseenReleases > 0 || s.unseenIssues > 0 || s.unseenPulls > 0 || s.unseenCi > 0 || !!s.celebrate; };
 const changed = () => sim.repos.filter(hasNew);
+const phase = () => Math.floor(sim.now / 2500);
 
 function log(html) { sim.log.unshift(html); sim.log.length = Math.min(sim.log.length, 12); }
 function toast(text) { sim.toast = { text, at: sim.now }; }
@@ -209,10 +232,20 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 function poll() {
 	const found = [];
 	for (const r of sim.repos) {
-		const c = r.remoteC - r.polledC, rel = r.remoteR - r.polledR;
-		r.polledC = r.remoteC; r.polledR = r.remoteR;
+		const c = r.remoteC - r.polledC, rel = r.remoteR - r.polledR, i = r.remoteI - r.polledI, p = r.remoteP - r.polledP, st = r.remoteS - r.polledS;
+		const ciBroke = r.remoteCi && r.remoteCi !== r.polledCi, ciFixed = !r.remoteCi && r.polledCi;
+		r.polledC = r.remoteC; r.polledR = r.remoteR; r.polledI = r.remoteI; r.polledP = r.remoteP; r.polledCi = r.remoteCi;
+		if (st > 0) { r.flash = st; r.flashUntil = sim.now + 8000; }
+		r.polledS = r.remoteS;
+		const m = milestoneFor(r.polledS);
+		if (m > r.milestone) { r.milestone = m; r.celebrate = m; }
+		if (ciBroke) found.push(`<span class="x">CI failed</span> on ${r.name}`);
+		if (ciFixed) found.push(`CI passing again on ${r.name}`);
+		if (p) found.push(`<span class="p">${plural(p, "new PR")}</span> on ${r.name}`);
+		if (i) found.push(`<span class="i">${plural(i, "new issue")}</span> on ${r.name}`);
 		if (c) found.push(`<span class="c">${plural(c, "new commit")}</span> on ${r.name}`);
 		if (rel) found.push(`<span class="r">${plural(rel, "new release")}</span> on ${r.name}`);
+		if (st > 0) found.push(`<span class="st">+${st} ★</span> on ${r.name}${r.celebrate === m && m ? ` (${m} stars!)` : ""}`);
 	}
 	log(found.length ? `check: ${found.join(", ")}` : "check: nothing new");
 	if (sim.nextPoll !== Infinity) sim.nextPoll = sim.now + POLL_MS;
@@ -224,6 +257,14 @@ const act = {
 		const r = sim.repos[i]; r.remoteR += 1; r.tag[1] += 1; r.tag[2] = 0;
 		log(`<span class="k">${r.name}</span>: published <span class="r">v${r.tag.join(".")}</span>`);
 	},
+	issue(i) { const r = sim.repos[i]; r.remoteI += 1; log(`<span class="k">${r.name}</span>: someone opened issue <span class="i">#${++r.number}</span>`); },
+	pr(i) { const r = sim.repos[i]; r.remoteP += 1; log(`<span class="k">${r.name}</span>: someone opened PR <span class="p">#${++r.number}</span>`); },
+	ci(i) {
+		const r = sim.repos[i];
+		if (r.remoteCi) { r.remoteCi = 0; log(`<span class="k">${r.name}</span>: CI passes on main again`); }
+		else { r.remoteCi = ++r.runId; log(`<span class="k">${r.name}</span>: <span class="x">CI failed</span> on main`); }
+	},
+	star(i, n = 1) { const r = sim.repos[i]; r.remoteS += n; log(`<span class="k">${r.name}</span>: <span class="st">+${n} ★</span> (now ${r.remoteS})`); },
 	checkNow() { poll(); },
 	press(id) {
 		if (id === "alert") {
@@ -235,7 +276,7 @@ const act = {
 		}
 		const r = sim.repos[id], s = summary(r);
 		if (hasNew(r)) {
-			const what = s.unseenCommits ? "the compare view of the new commits" : "the releases page";
+			const what = s.unseenCi ? "the failed CI run" : s.unseenPulls ? (s.unseenPulls === 1 ? `PR #${r.number}` : "the pull requests") : s.unseenIssues ? (s.unseenIssues === 1 ? `issue #${r.number}` : "the issues") : s.unseenReleases ? "the releases page" : s.unseenCommits ? "the compare view of the new commits" : "the stargazers";
 			r.totalsUntil = 0;
 			return toast(`On a real deck this opens ${what} for ${r.name} in your browser.`);
 		}
@@ -268,7 +309,7 @@ const act = {
 		if (p && !p.held) act.press(id);
 	},
 };
-function see(r) { r.seenC = r.polledC; r.seenR = r.polledR; }
+function see(r) { r.seenC = r.polledC; r.seenR = r.polledR; r.seenI = r.polledI; r.seenP = r.polledP; r.seenCi = r.polledCi; r.seenS = r.polledS; r.celebrate = undefined; r.flashUntil = 0; }
 
 function advance(t) {
 	while (sim.nextPoll <= t) { sim.now = sim.nextPoll; poll(); }
@@ -310,9 +351,13 @@ sim.repos.forEach((r, i) => {
 	const d = document.createElement("div");
 	d.className = "repo";
 	d.innerHTML = `<div class="name">${r.name}</div><div class="stats" id="stats${i}"></div><div class="actions">
-		<button class="btn commit" data-a="push" data-i="${i}" data-n="1"><span class="dot"></span>Push a commit</button>
+		<button class="btn commit" data-a="push" data-i="${i}" data-n="1"><span class="dot"></span>Push</button>
 		<button class="btn commit" data-a="push" data-i="${i}" data-n="3"><span class="dot"></span>Push 3</button>
-		<button class="btn release" data-a="release" data-i="${i}"><span class="dot"></span>Publish release</button></div>`;
+		<button class="btn release" data-a="release" data-i="${i}"><span class="dot"></span>Release</button>
+		<button class="btn issue" data-a="issue" data-i="${i}"><span class="dot"></span>Issue</button>
+		<button class="btn pull" data-a="pr" data-i="${i}"><span class="dot"></span>PR</button>
+		<button class="btn ci" data-a="ci" data-i="${i}"><span class="dot"></span>Break/fix CI</button>
+		<button class="btn star" data-a="star" data-i="${i}" data-n="1"><span class="dot"></span>Star</button></div>`;
 	reposEl.appendChild(d);
 });
 reposEl.addEventListener("click", (e) => {
@@ -335,16 +380,16 @@ function setImg(img, svg) {
 function render() {
 	sim.repos.forEach((r, i) => {
 		const s = summary(r);
-		setImg(keyEls[i].querySelector("img"), r.totalsUntil > sim.now ? R.renderTotalsKey(s) : R.renderRepoKey(s, r.name));
-		$(`stats${i}`).innerHTML = `Remote: <b>${r.remoteC.toLocaleString("en")}</b> commits · <b>${r.remoteR}</b> releases · latest v${r.tag.join(".")}`;
+		setImg(keyEls[i].querySelector("img"), r.totalsUntil > sim.now ? R.renderTotalsKey(s) : R.renderRepoKey(s, r.name, undefined, false, phase()));
+		$(`stats${i}`).innerHTML = `Remote: <b>${r.remoteC.toLocaleString("en")}</b> commits · <b>${r.remoteR}</b> releases · <b>${r.remoteS.toLocaleString("en")}</b> ★ · CI ${r.remoteCi ? '<b style="color:var(--error)">failing</b>' : "passing"}`;
 	});
 	const list = changed();
 	const a = sim.alert.index;
-	setImg(keyEls.alert.querySelector("img"), a === null ? R.renderAlertKey(list.length, sim.repos.length) : R.renderRepoKey(summary(list[a]), list[a].name, `${a + 1}/${list.length}`));
+	setImg(keyEls.alert.querySelector("img"), a === null ? R.renderAlertKey(list.length, sim.repos.length) : R.renderRepoKey(summary(list[a]), list[a].name, `${a + 1}/${list.length}`, false, phase()));
 	const r0 = sim.repos[0];
-	setImg($("strip0"), r0.totalsUntil > sim.now ? R.renderTotalsStrip(summary(r0)) : R.renderRepoStrip(summary(r0), r0.name));
+	setImg($("strip0"), r0.totalsUntil > sim.now ? R.renderTotalsStrip(summary(r0)) : R.renderRepoStrip(summary(r0), r0.name, undefined, phase()));
 	setImg($("infobar"), a === null ? R.renderAlertInfobar(list.length, sim.repos.length) : R.renderAlertInfobar(list.length, sim.repos.length, undefined, summary(list[a]), `${a + 1}/${list.length}`));
-	setImg($("strip1"), a === null ? R.renderAlertStrip(list.length, sim.repos.length) : R.renderRepoStrip(summary(list[a]), list[a].name, `${a + 1}/${list.length}`));
+	setImg($("strip1"), a === null ? R.renderAlertStrip(list.length, sim.repos.length) : R.renderRepoStrip(summary(list[a]), list[a].name, `${a + 1}/${list.length}`, phase()));
 	for (const [id, el] of Object.entries(keyEls)) {
 		const p = sim.pressing[id];
 		el.classList.toggle("down", !!p);
@@ -367,46 +412,54 @@ const say = (text) => step(0, () => setCaption(text));
 const click = (sel, fn, wait = 900) => { step(0, () => aim(sel)); step(wait, () => { flashBtn(sel); fn(); }); };
 const holdKey = (id, ms = 700) => { step(0, () => aim(`[data-key="${id}"]`)); step(800, () => act.keyDown(id)); step(ms, () => act.keyUp(id)); };
 const tapKey = (id) => { step(0, () => aim(`[data-key="${id}"]`)); step(800, () => act.keyDown(id)); step(140, () => act.keyUp(id)); };
+const check = () => { step(400, () => aim("#checkNow")); step(900, () => { flashBtn("#checkNow"); act.checkNow(); }); };
 function buildTour() {
 	step(0, () => showCard("intro"));
 	step(3200, () => hideCard());
 	say("Track any repo. Only changes after you add it count.");
 	step(2600, () => {});
-	say("Someone pushes two commits…");
-	click('[data-a="push"][data-i="0"][data-n="1"]', () => act.push(0, 1));
-	click('[data-a="push"][data-i="0"][data-n="1"]', () => act.push(0, 1), 500);
-	step(400, () => aim("#checkNow"));
+	say("Someone opens a pull request…");
+	click('[data-a="pr"][data-i="0"]', () => act.pr(0));
 	say("…and the next check lights up the key.");
-	step(900, () => { flashBtn("#checkNow"); act.checkNow(); });
+	check();
 	step(2600, () => {});
-	say("Releases get their own badge.");
-	click('[data-a="release"][data-i="1"]', () => act.release(1));
-	step(400, () => aim("#checkNow"));
-	step(900, () => { flashBtn("#checkNow"); act.checkNow(); });
-	step(2400, () => {});
+	say("Failed CI on the main branch goes straight to the top.");
+	click('[data-a="ci"][data-i="1"]', () => act.ci(1));
+	check();
+	step(2600, () => {});
+	say("Issues, commits and releases get their own badges.");
+	click('[data-a="issue"][data-i="0"]', () => act.issue(0));
+	click('[data-a="push"][data-i="0"][data-n="3"]', () => act.push(0, 3), 600);
+	click('[data-a="release"][data-i="1"]', () => act.release(1), 600);
+	check();
+	step(2600, () => {});
 	say("The alert key counts every repo with something new.");
 	step(2200, () => {});
 	say("Press it to cycle through them.");
 	tapKey("alert");
-	step(1600, () => {});
-	tapKey("alert");
 	step(1800, () => {});
+	tapKey("alert");
+	step(2000, () => {});
 	say("Hold any key to mark it seen.");
 	holdKey(0, 900);
 	step(1800, () => {});
-	say("More changes come in…");
-	click('[data-a="push"][data-i="0"][data-n="3"]', () => act.push(0, 3));
-	step(400, () => aim("#checkNow"));
-	step(900, () => { flashBtn("#checkNow"); act.checkNow(); });
-	step(1600, () => {});
+	say("New stars flash on the key…");
+	click('[data-a="star"][data-i="0"]', () => act.star(0, 1));
+	click('[data-a="star"][data-i="0"]', () => act.star(0, 1), 500);
+	check();
+	step(3400, () => {});
+	say("…and milestones get a celebration.");
+	click('[data-a="star"][data-i="0"]', () => act.star(0, 1));
+	check();
+	step(4500, () => {});
 	say("Hold the alert on its count to clear everything at once.");
 	holdKey("alert", 900);
-	step(1600, () => {});
+	step(1800, () => {});
 	say("Nothing new? Press for the repo's totals.");
-	tapKey(1);
+	tapKey(0);
 	step(3200, () => setCaption(""));
 	step(200, () => showCard("outro"));
-	step(5000, () => {});
+	step(5500, () => {});
 }
 const DURATION = () => at;
 
@@ -433,8 +486,8 @@ function showCard(kind) {
 	const c = $("card");
 	Object.assign(card, { shown: true, at: sim.now });
 	c.innerHTML = kind === "intro"
-		? `<img src="icon.svg" alt=""><h2>Repo Watch</h2><p>A Stream Deck plugin for new GitHub commits and releases</p><div class="note">Simulated demo · keys drawn by the plugin's real renderer</div>`
-		: `<img src="icon.svg" alt=""><h2>Repo Watch</h2><ul><li>Commits and releases tracked separately</li><li>One alert key for every repo you follow</li><li>Hold to mark seen · Stream Deck + and Neo supported</li><li>Public repos work without a token</li></ul>`;
+		? `<img src="icon.svg" alt=""><h2>Repo Watch</h2><p>A Stream Deck plugin for what's new on your GitHub repos</p><div class="note">Simulated demo · keys drawn by the plugin's real renderer</div>`
+		: `<img src="icon.svg" alt=""><h2>Repo Watch</h2><ul><li>Failed CI, review requests, PRs, issues, releases and commits</li><li>Stars, with a celebration at every milestone</li><li>One alert key for every repo you follow</li><li>Hold to mark seen · Stream Deck + and Neo supported</li><li>Public repos work without a token</li></ul>`;
 }
 function hideCard() { Object.assign(card, { shown: false, at: sim.now }); }
 
