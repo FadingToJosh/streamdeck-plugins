@@ -1,6 +1,6 @@
 # Repo Watch for Stream Deck: help and support
 
-Repo Watch is a Stream Deck plugin that tells you when GitHub repositories you follow have **new commits or releases you haven't seen yet**. Press a key to open what changed, and hold it to mark it seen.
+Repo Watch is a Stream Deck plugin that tells you when GitHub repositories you follow have **something new you haven't seen yet**: commits, releases, new issues, new pull requests, failed CI on the default branch, and review requests for you. It also shows each repo's stars, flashes "+N" when new ones arrive, and celebrates star milestones. Press a key to open what changed, and hold it to mark it seen. You choose per repo what it alerts on.
 
 This folder holds the plugin's documentation. Support for all of FadingToJosh's Stream Deck plugins goes through this repository's issues. The plugin's source code isn't published here.
 
@@ -14,7 +14,7 @@ This folder holds the plugin's documentation. Support for all of FadingToJosh's 
 
 ## Creating a read-only token
 
-A token is optional for public repos and required for private ones. The guide explains how to make a fine-grained, read-only one:
+A token is optional for public repos and required for private ones and for review request alerts. Without one, the plugin checks less often to stay inside GitHub's limit of 60 requests an hour. The guide explains how to make a fine-grained, read-only one:
 
 [English](token-guide/en.md) · [Deutsch](token-guide/de.md) · [Español](token-guide/es.md) · [Français](token-guide/fr.md) · [日本語](token-guide/ja.md) · [한국어](token-guide/ko.md) · [Português](token-guide/pt.md) · [Русский](token-guide/ru.md) · [简体中文](token-guide/zh_CN.md)
 
@@ -24,7 +24,7 @@ The translations are machine-generated. If you spot a mistake, please open an is
 
 | | Key | Stream Deck + dial |
 | --- | --- | --- |
-| **Repo Tracker**: open the new changes | Press | Press, or tap the strip |
+| **Repo Tracker**: open the most urgent new change (failed run, PR, issue, release, commits) | Press | Press, or tap the strip |
 | **Repo Tracker**: totals when nothing is new | Press | Press |
 | **Repo Tracker**: mark seen | Hold ~0.5 s | Hold, or long-touch the strip |
 | **Update Alert**: next repo with changes | Press | Turn, or press |
